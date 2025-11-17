@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { ScannerInput } from '@/components/ScannerInput';
 import { ScanProgress } from '@/components/ScanProgress';
 import { ScanResults } from '@/components/ScanResults';
+import { ThemeToggle } from '@/components/ThemeToggle';
 import { parseUrls, scanUrl, ScanResult } from '@/lib/scanner';
 
 const Index = () => {
@@ -53,8 +54,12 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background py-8 px-4 sm:py-12">
+    <div className="min-h-screen bg-background py-8 px-4 sm:py-12 transition-colors duration-300">
       <div className="max-w-7xl mx-auto space-y-6 sm:space-y-8">
+        <div className="fixed top-4 right-4 z-50">
+          <ThemeToggle />
+        </div>
+        
         <header className="text-center space-y-3 py-4">
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight bg-gradient-to-r from-primary via-primary/80 to-primary bg-clip-text text-transparent">
             SITE SEARCH LITE
