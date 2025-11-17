@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Button } from './ui/button';
 import { Textarea } from './ui/textarea';
+import { useToast } from '@/hooks/use-toast';
 
 interface ScannerInputProps {
   onScan: (urls: string[]) => void;
@@ -9,6 +10,8 @@ interface ScannerInputProps {
 
 export function ScannerInput({ onScan, isScanning }: ScannerInputProps) {
   const [input, setInput] = useState('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const { toast } = useToast();
 
   const handleScan = () => {
     const urls = input
@@ -23,6 +26,42 @@ export function ScannerInput({ onScan, isScanning }: ScannerInputProps) {
 
   const handleClear = () => {
     setInput('');
+  };
+
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const fileType = file.name.split('.').pop()?.toLowerCase();
+    if (fileType !== 'txt' && fileType !== 'csv') {
+      toast({
+        title: 'Invalid file type',
+        description: 'Please upload a .txt or .csv file',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const content = e.target?.result as string;
+      const urls = content
+        .split(/[\n,]/)
+        .map(line => line.trim())
+        .filter(line => line.length > 0);
+      
+      setInput(urls.join('\n'));
+      toast({
+        title: 'File loaded',
+        description: `Loaded ${urls.length} URLs from file`,
+      });
+    };
+    reader.readAsText(file);
+    
+    // Reset file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   };
 
   return (
@@ -43,6 +82,14 @@ export function ScannerInput({ onScan, isScanning }: ScannerInputProps) {
           {isScanning ? 'Scanning...' : 'Scan Now'}
         </Button>
         <Button
+          onClick={() => fileInputRef.current?.click()}
+          variant="secondary"
+          disabled={isScanning}
+          className="flex-1 text-base h-12"
+        >
+          Upload File (TXT/CSV)
+        </Button>
+        <Button
           onClick={handleClear}
           variant="outline"
           disabled={isScanning}
@@ -51,6 +98,13 @@ export function ScannerInput({ onScan, isScanning }: ScannerInputProps) {
           Clear
         </Button>
       </div>
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".txt,.csv"
+        onChange={handleFileUpload}
+        className="hidden"
+      />
     </div>
   );
 }
