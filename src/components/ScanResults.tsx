@@ -1,5 +1,18 @@
 import { ScanResult, getSeverityIcon, getSeverityColor } from '@/lib/scanner';
 import { Card } from './ui/card';
+import { Badge } from './ui/badge';
+import { Separator } from './ui/separator';
+import { 
+  Shield, 
+  Clock, 
+  Activity, 
+  Calendar, 
+  CheckCircle2, 
+  XCircle, 
+  AlertCircle,
+  Search,
+  TrendingUp
+} from 'lucide-react';
 
 interface ScanResultsProps {
   results: ScanResult[];
@@ -9,37 +22,209 @@ export function ScanResults({ results }: ScanResultsProps) {
   if (results.length === 0) return null;
 
   return (
-    <div className="w-full max-w-4xl mx-auto space-y-6">
+    <div className="w-full max-w-6xl mx-auto space-y-6">
       {results.map((result, index) => (
-        <Card key={index} className="p-6 space-y-6">
-          <div>
-            <h2 className="text-2xl font-bold mb-2">
-              Results for: {result.url}
-            </h2>
-            <div className="space-y-2">
-              <p className="text-xl">
-                Overall Security Score: <span className="font-bold">{result.score} / 100</span>
-              </p>
-              <p className="flex items-center gap-2 text-lg">
-                <span className="w-3 h-3 rounded-full bg-foreground inline-block"></span>
-                {result.riskLevel}
-              </p>
+        <div key={index} className="space-y-6">
+          {/* Header Card */}
+          <Card className="p-6">
+            <div className="space-y-4">
+              <div>
+                <h2 className="text-3xl font-bold mb-2">
+                  {result.url}
+                </h2>
+                <div className="flex flex-wrap gap-4 items-center">
+                  <div className="flex items-center gap-2">
+                    <Shield className="w-5 h-5" />
+                    <span className="text-lg">Security Score: <span className="font-bold text-2xl">{result.score}/100</span></span>
+                  </div>
+                  <Badge 
+                    variant={result.score >= 75 ? 'default' : result.score >= 50 ? 'secondary' : 'destructive'}
+                    className="text-base px-4 py-1"
+                  >
+                    {result.riskLevel}
+                  </Badge>
+                </div>
+              </div>
+              
               {result.issues.length > 0 && (
-                <div className="text-sm text-muted-foreground">
-                  <p>- {result.issues.length} issue{result.issues.length !== 1 ? 's' : ''} found</p>
-                  <p>
-                    - {result.issues.filter(i => i.severity === 'high').length} high severity, 
-                    {' '}{result.issues.filter(i => i.severity === 'medium').length} medium severity,
-                    {' '}{result.issues.filter(i => i.severity === 'low').length} low severity
-                  </p>
+                <div className="flex flex-wrap gap-4 text-sm">
+                  <div className="flex items-center gap-2">
+                    <span className="font-semibold">Total Issues:</span>
+                    <Badge variant="outline">{result.issues.length}</Badge>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <XCircle className="w-4 h-4 text-destructive" />
+                    <span>{result.issues.filter(i => i.severity === 'high').length} High</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <AlertCircle className="w-4 h-4 text-warning" />
+                    <span>{result.issues.filter(i => i.severity === 'medium').length} Medium</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-info" />
+                    <span>{result.issues.filter(i => i.severity === 'low').length} Low</span>
+                  </div>
                 </div>
               )}
             </div>
-          </div>
+          </Card>
+
+          {/* Website Health Metrics */}
+          <Card className="p-6">
+            <h3 className="text-2xl font-bold mb-4 flex items-center gap-2">
+              <Activity className="w-6 h-6" />
+              Website Health Metrics
+            </h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="space-y-1">
+                <p className="text-sm text-muted-foreground flex items-center gap-1">
+                  <TrendingUp className="w-3 h-3" />
+                  Uptime
+                </p>
+                <p className="text-xl font-bold">{result.healthMetrics.uptime}</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-sm text-muted-foreground flex items-center gap-1">
+                  <Clock className="w-3 h-3" />
+                  Response Time
+                </p>
+                <p className="text-xl font-bold">{result.healthMetrics.responseTime}ms</p>
+              </div>
+              {result.healthMetrics.certificateExpiry && (
+                <div className="space-y-1">
+                  <p className="text-sm text-muted-foreground flex items-center gap-1">
+                    <Shield className="w-3 h-3" />
+                    SSL Expires
+                  </p>
+                  <p className="text-sm font-semibold">{result.healthMetrics.certificateExpiry}</p>
+                </div>
+              )}
+              {result.healthMetrics.lastModified && (
+                <div className="space-y-1">
+                  <p className="text-sm text-muted-foreground flex items-center gap-1">
+                    <Calendar className="w-3 h-3" />
+                    Last Modified
+                  </p>
+                  <p className="text-sm font-semibold">{result.healthMetrics.lastModified}</p>
+                </div>
+              )}
+            </div>
+          </Card>
+
+          {/* SEO Analysis */}
+          <Card className="p-6">
+            <h3 className="text-2xl font-bold mb-4 flex items-center gap-2">
+              <Search className="w-6 h-6" />
+              SEO Analysis
+            </h3>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="font-semibold">SEO Score:</span>
+                <span className="text-2xl font-bold">{result.seo.seoScore}/100</span>
+              </div>
+              <Separator />
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm">Title Tag</span>
+                  {result.seo.hasTitle ? (
+                    <CheckCircle2 className="w-4 h-4 text-success" />
+                  ) : (
+                    <XCircle className="w-4 h-4 text-destructive" />
+                  )}
+                </div>
+                {result.seo.titleLength && (
+                  <div className="text-sm text-muted-foreground col-span-2">
+                    Length: {result.seo.titleLength} characters {result.seo.titleLength > 60 && '(too long)'}
+                  </div>
+                )}
+                <div className="flex items-center justify-between">
+                  <span className="text-sm">Meta Description</span>
+                  {result.seo.hasMetaDescription ? (
+                    <CheckCircle2 className="w-4 h-4 text-success" />
+                  ) : (
+                    <XCircle className="w-4 h-4 text-destructive" />
+                  )}
+                </div>
+                {result.seo.metaDescriptionLength && (
+                  <div className="text-sm text-muted-foreground col-span-2">
+                    Length: {result.seo.metaDescriptionLength} characters {result.seo.metaDescriptionLength > 160 && '(too long)'}
+                  </div>
+                )}
+                <div className="flex items-center justify-between">
+                  <span className="text-sm">H1 Tag</span>
+                  {result.seo.hasH1 ? (
+                    <CheckCircle2 className="w-4 h-4 text-success" />
+                  ) : (
+                    <XCircle className="w-4 h-4 text-destructive" />
+                  )}
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm">Canonical URL</span>
+                  {result.seo.hasCanonical ? (
+                    <CheckCircle2 className="w-4 h-4 text-success" />
+                  ) : (
+                    <XCircle className="w-4 h-4 text-destructive" />
+                  )}
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm">Robots Meta</span>
+                  {result.seo.hasRobotsMeta ? (
+                    <CheckCircle2 className="w-4 h-4 text-success" />
+                  ) : (
+                    <XCircle className="w-4 h-4 text-destructive" />
+                  )}
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm">Sitemap</span>
+                  {result.seo.hasSitemap ? (
+                    <CheckCircle2 className="w-4 h-4 text-success" />
+                  ) : (
+                    <XCircle className="w-4 h-4 text-destructive" />
+                  )}
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm">Structured Data</span>
+                  {result.seo.hasStructuredData ? (
+                    <CheckCircle2 className="w-4 h-4 text-success" />
+                  ) : (
+                    <XCircle className="w-4 h-4 text-destructive" />
+                  )}
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm">Mobile Responsive</span>
+                  {result.seo.mobileResponsive ? (
+                    <CheckCircle2 className="w-4 h-4 text-success" />
+                  ) : (
+                    <XCircle className="w-4 h-4 text-destructive" />
+                  )}
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm">Page Load Speed</span>
+                  <Badge variant={
+                    result.seo.pageLoadSpeed === 'fast' ? 'default' : 
+                    result.seo.pageLoadSpeed === 'moderate' ? 'secondary' : 
+                    'destructive'
+                  }>
+                    {result.seo.pageLoadSpeed}
+                  </Badge>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm">Image Optimization</span>
+                  <Badge variant={
+                    result.seo.imageOptimization === 'good' ? 'default' : 
+                    result.seo.imageOptimization === 'fair' ? 'secondary' : 
+                    'destructive'
+                  }>
+                    {result.seo.imageOptimization}
+                  </Badge>
+                </div>
+              </div>
+            </div>
+          </Card>
 
           {/* Technology Detection Section */}
-          <div className="space-y-4 border-t pt-4">
-            <h3 className="text-xl font-bold">🔍 Technology Stack & Architecture</h3>
+          <Card className="p-6">
+            <h3 className="text-2xl font-bold mb-4">🔍 Technology Stack & Architecture</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {result.technology.server && (
                 <div className="space-y-1">
@@ -84,48 +269,92 @@ export function ScanResults({ results }: ScanResultsProps) {
                 </div>
               )}
             </div>
-          </div>
+          </Card>
 
+          {/* Security Issues */}
           {result.issues.length > 0 && (
-            <div className="space-y-4">
-              <h3 className="text-xl font-bold">Issue List</h3>
-              {result.issues.map((issue, issueIndex) => (
-                <div
-                  key={issueIndex}
-                  className="border-l-4 pl-4 py-2 space-y-1"
-                  style={{
-                    borderColor: issue.severity === 'high' 
-                      ? 'hsl(var(--destructive))' 
-                      : issue.severity === 'medium' 
-                        ? 'hsl(var(--warning))' 
-                        : 'hsl(var(--info))'
-                  }}
-                >
-                  <p className="font-semibold flex items-center gap-2">
-                    <span>{getSeverityIcon(issue.severity)}</span>
-                    <span className={getSeverityColor(issue.severity)}>
-                      {issue.severity.charAt(0).toUpperCase() + issue.severity.slice(1)}:
-                    </span>
-                    {issue.title}
-                  </p>
-                  <p className="text-sm text-muted-foreground">{issue.description}</p>
-                  <p className="text-sm">
-                    <span className="font-medium">Fix:</span> {issue.fix}
-                  </p>
-                </div>
-              ))}
-            </div>
+            <Card className="p-6">
+              <h3 className="text-2xl font-bold mb-6">🔒 Security Issues Detected</h3>
+              <div className="space-y-6">
+                {result.issues.map((issue, issueIndex) => (
+                  <div
+                    key={issueIndex}
+                    className="border-l-4 pl-6 py-4 space-y-4 bg-muted/30 rounded-r-lg"
+                    style={{
+                      borderColor: issue.severity === 'high' 
+                        ? 'hsl(var(--destructive))' 
+                        : issue.severity === 'medium' 
+                          ? 'hsl(var(--warning))' 
+                          : 'hsl(var(--info))'
+                    }}
+                  >
+                    <div className="flex items-start gap-3">
+                      <span className="text-2xl">{getSeverityIcon(issue.severity)}</span>
+                      <div className="flex-1 space-y-3">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <Badge variant={
+                            issue.severity === 'high' ? 'destructive' : 
+                            issue.severity === 'medium' ? 'secondary' : 
+                            'outline'
+                          }>
+                            {issue.severity.toUpperCase()}
+                          </Badge>
+                          <h4 className="text-xl font-bold">{issue.title}</h4>
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <p className="text-base leading-relaxed">{issue.description}</p>
+                        </div>
+
+                        <div className="space-y-2 pt-2">
+                          <h5 className="font-bold text-sm uppercase text-destructive">Impact</h5>
+                          <p className="text-sm leading-relaxed bg-destructive/10 p-3 rounded-md">
+                            {issue.impact}
+                          </p>
+                        </div>
+
+                        <div className="space-y-2">
+                          <h5 className="font-bold text-sm uppercase text-muted-foreground">Technical Details</h5>
+                          <p className="text-sm leading-relaxed text-muted-foreground">
+                            {issue.technicalDetails}
+                          </p>
+                        </div>
+
+                        <div className="space-y-2 pt-2">
+                          <h5 className="font-bold text-sm uppercase text-success">Recommended Fix</h5>
+                          <p className="text-sm leading-relaxed bg-success/10 p-3 rounded-md">
+                            {issue.fix}
+                          </p>
+                        </div>
+
+                        {issue.references && issue.references.length > 0 && (
+                          <div className="space-y-2 pt-2">
+                            <h5 className="font-bold text-sm uppercase text-muted-foreground">References</h5>
+                            <ul className="text-sm space-y-1 text-info">
+                              {issue.references.map((ref, refIndex) => (
+                                <li key={refIndex}>• {ref}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </Card>
           )}
 
           {result.issues.length === 0 && (
-            <div className="text-center py-8">
-              <p className="text-xl text-success">✓ No security issues detected</p>
-              <p className="text-sm text-muted-foreground mt-2">
-                This website appears to have good security practices
+            <Card className="p-8 text-center bg-success/10">
+              <CheckCircle2 className="w-16 h-16 text-success mx-auto mb-4" />
+              <p className="text-2xl font-bold text-success mb-2">✓ No security issues detected</p>
+              <p className="text-muted-foreground">
+                This website appears to follow security best practices
               </p>
-            </div>
+            </Card>
           )}
-        </Card>
+        </div>
       ))}
       
       <div className="text-center text-sm text-muted-foreground py-4">
