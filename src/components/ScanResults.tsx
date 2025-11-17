@@ -37,6 +37,55 @@ export function ScanResults({ results }: ScanResultsProps) {
             </div>
           </div>
 
+          {/* Technology Detection Section */}
+          <div className="space-y-4 border-t pt-4">
+            <h3 className="text-xl font-bold">🔍 Technology Stack & Architecture</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {result.technology.server && (
+                <div className="space-y-1">
+                  <p className="font-semibold text-sm text-muted-foreground">Server</p>
+                  <p className="text-base">{result.technology.server}</p>
+                </div>
+              )}
+              {result.technology.language && result.technology.language.length > 0 && (
+                <div className="space-y-1">
+                  <p className="font-semibold text-sm text-muted-foreground">Languages</p>
+                  <p className="text-base">{result.technology.language.join(', ')}</p>
+                </div>
+              )}
+              {result.technology.framework && result.technology.framework.length > 0 && (
+                <div className="space-y-1">
+                  <p className="font-semibold text-sm text-muted-foreground">Framework</p>
+                  <p className="text-base">{result.technology.framework.join(', ')}</p>
+                </div>
+              )}
+              {result.technology.cms && (
+                <div className="space-y-1">
+                  <p className="font-semibold text-sm text-muted-foreground">CMS</p>
+                  <p className="text-base">{result.technology.cms}</p>
+                </div>
+              )}
+              {result.technology.cdn && (
+                <div className="space-y-1">
+                  <p className="font-semibold text-sm text-muted-foreground">CDN</p>
+                  <p className="text-base">{result.technology.cdn}</p>
+                </div>
+              )}
+              {result.technology.security && result.technology.security.length > 0 && (
+                <div className="space-y-1">
+                  <p className="font-semibold text-sm text-muted-foreground">Security Features</p>
+                  <p className="text-base">{result.technology.security.join(', ')}</p>
+                </div>
+              )}
+              {result.technology.analytics && result.technology.analytics.length > 0 && (
+                <div className="space-y-1">
+                  <p className="font-semibold text-sm text-muted-foreground">Analytics</p>
+                  <p className="text-base">{result.technology.analytics.join(', ')}</p>
+                </div>
+              )}
+            </div>
+          </div>
+
           {result.issues.length > 0 && (
             <div className="space-y-4">
               <h3 className="text-xl font-bold">Issue List</h3>
