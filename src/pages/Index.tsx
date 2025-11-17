@@ -57,7 +57,7 @@ const Index = () => {
       <div className="max-w-7xl mx-auto space-y-6 sm:space-y-8">
         <header className="text-center space-y-3 py-4">
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight bg-gradient-to-r from-primary via-primary/80 to-primary bg-clip-text text-transparent">
-            WEBSITE ANALYZER
+            SITE SEARCH LITE
           </h1>
           <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto">
             Comprehensive Website Security, SEO & Network Intelligence Scanner
