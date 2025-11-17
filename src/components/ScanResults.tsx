@@ -1,4 +1,4 @@
-import { ScanResult, getSeverityIcon, getSeverityColor } from '@/lib/scanner';
+import { ScanResult, PassedCheck, getSeverityIcon, getSeverityColor } from '@/lib/scanner';
 import { Card } from './ui/card';
 import { Badge } from './ui/badge';
 import { Separator } from './ui/separator';
@@ -352,6 +352,33 @@ export function ScanResults({ results }: ScanResultsProps) {
               <p className="text-muted-foreground">
                 This website appears to follow security best practices
               </p>
+            </Card>
+          )}
+
+          {/* Passed Security Checks */}
+          {result.passedChecks && result.passedChecks.length > 0 && (
+            <Card className="p-6">
+              <div className="flex items-center gap-3 mb-6">
+                <CheckCircle2 className="w-6 h-6 text-success" />
+                <h3 className="text-2xl font-bold">✓ Passed Security Checks</h3>
+              </div>
+              <p className="text-muted-foreground mb-4">
+                The following security controls were tested and verified to be properly implemented:
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {result.passedChecks.map((check, checkIndex) => (
+                  <div
+                    key={checkIndex}
+                    className="flex items-start gap-3 p-4 bg-success/10 border border-success/30 rounded-lg hover:bg-success/15 transition-colors"
+                  >
+                    <CheckCircle2 className="w-5 h-5 text-success flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-semibold text-sm text-foreground">{check.title}</p>
+                      <p className="text-xs text-muted-foreground mt-1">{check.description}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </Card>
           )}
         </div>
