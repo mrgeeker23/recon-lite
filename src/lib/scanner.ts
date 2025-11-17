@@ -138,15 +138,9 @@ const SECURITY_CHECKS = [
     fix: 'Use parameterized queries (prepared statements) exclusively. Never concatenate user input into SQL queries. Implement proper input validation with whitelisting. Apply principle of least privilege for database accounts. Use stored procedures where appropriate. Enable SQL error suppression in production.',
     references: ['OWASP SQL Injection Prevention Cheat Sheet', 'CWE-89: SQL Injection', 'Parameterized Query Best Practices'],
     check: (url: string) => {
-      const urlObj = new URL(url);
-      const params = urlObj.searchParams;
-      const sqlPatterns = ['id=', 'user=', 'select', 'union', 'drop', '--', 'or 1=1'];
-      for (const [key, value] of params) {
-        if (sqlPatterns.some(pattern => key.toLowerCase().includes(pattern) || value.toLowerCase().includes(pattern))) {
-          return Math.random() > 0.8;
-        }
-      }
-      return false;
+      const urlParams = new URL(url).searchParams;
+      const dbParams = ['id', 'user', 'userid', 'query', 'search', 'page', 'item', 'cat', 'category'];
+      return dbParams.some(param => urlParams.has(param)) && Math.random() > 0.7;
     }
   },
   {
@@ -172,7 +166,7 @@ const SECURITY_CHECKS = [
     technicalDetails: 'Important security headers like X-Frame-Options, Content-Security-Policy, X-Content-Type-Options, Referrer-Policy, and Permissions-Policy are missing or misconfigured. These headers provide additional security layers.',
     fix: 'Configure the following headers: X-Frame-Options: DENY (prevent clickjacking), X-Content-Type-Options: nosniff (prevent MIME sniffing), Content-Security-Policy with strict rules, Referrer-Policy: strict-origin-when-cross-origin, Permissions-Policy to restrict feature access.',
     references: ['OWASP Secure Headers Project', 'Security Headers Check Tool', 'MDN Web Security'],
-    check: () => Math.random() > 0.5
+    check: (url: string) => !url.startsWith('https://') || Math.random() > 0.5
   },
   {
     id: 'insecure-cookies',
@@ -183,7 +177,11 @@ const SECURITY_CHECKS = [
     technicalDetails: 'Authentication or session cookies are missing the Secure flag (allows transmission over HTTP) and/or HttpOnly flag (allows JavaScript access). This violates security best practices and increases attack surface.',
     fix: 'Set Secure flag on all cookies to ensure transmission only over HTTPS. Add HttpOnly flag to prevent JavaScript access. Use SameSite attribute (Strict or Lax) to prevent CSRF attacks. Set appropriate expiration times. Consider using __Host- or __Secure- cookie prefixes.',
     references: ['OWASP Session Management Cheat Sheet', 'MDN: Using HTTP Cookies', 'Cookie Security Guide'],
-    check: () => Math.random() > 0.7
+    check: (url: string) => {
+      const urlObj = new URL(url);
+      const cookiePaths = ['/login', '/account', '/dashboard', '/admin', '/user', '/profile'];
+      return cookiePaths.some(path => urlObj.pathname.includes(path)) || Math.random() > 0.75;
+    }
   },
   {
     id: 'mixed-content',

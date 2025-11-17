@@ -13,6 +13,7 @@ import {
   Search,
   TrendingUp
 } from 'lucide-react';
+import { NetworkSection } from './NetworkSection';
 
 interface ScanResultsProps {
   results: ScanResult[];
@@ -221,6 +222,8 @@ export function ScanResults({ results }: ScanResultsProps) {
               </div>
             </div>
           </Card>
+
+          <NetworkSection network={result.network} />
 
           {/* Technology Detection Section */}
           <Card className="p-6">
