@@ -25,6 +25,37 @@ export interface SEOInfo {
   pageLoadSpeed: 'fast' | 'moderate' | 'slow';
   imageOptimization: 'good' | 'fair' | 'poor';
   seoScore: number;
+  seoScoreBreakdown: {
+    category: string;
+    score: number;
+    maxScore: number;
+    details: string;
+  }[];
+}
+
+export interface NetworkInfo {
+  openPorts: {
+    port: number;
+    service: string;
+    status: 'open' | 'filtered' | 'closed';
+    protocol: string;
+  }[];
+  ipAddress: string;
+  ipv6Address?: string;
+  dnsRecords: {
+    type: string;
+    value: string;
+  }[];
+  hosting: {
+    provider?: string;
+    location?: string;
+    asn?: string;
+  };
+  connections: {
+    internal: number;
+    external: number;
+    thirdParty: string[];
+  };
 }
 
 export interface TechnologyInfo {
@@ -43,6 +74,7 @@ export interface ScanResult {
   riskLevel: string;
   issues: SecurityIssue[];
   technology: TechnologyInfo;
+  network: NetworkInfo;
   seo: SEOInfo;
   healthMetrics: {
     uptime: string;
@@ -241,21 +273,134 @@ export function analyzeSEO(url: string): SEOInfo {
     imageOptimization: (['good', 'fair', 'poor'] as const)[Math.floor(Math.random() * 3)]
   };
   
-  // Calculate SEO score
-  let seoScore = 0;
-  if (seoChecks.hasTitle) seoScore += 15;
-  if (seoChecks.hasMetaDescription) seoScore += 15;
-  if (seoChecks.hasH1) seoScore += 10;
-  if (seoChecks.titleLength && seoChecks.titleLength <= 60) seoScore += 10;
-  if (seoChecks.metaDescriptionLength && seoChecks.metaDescriptionLength <= 160) seoScore += 10;
-  if (seoChecks.hasCanonical) seoScore += 5;
-  if (seoChecks.hasRobotsMeta) seoScore += 5;
-  if (seoChecks.hasSitemap) seoScore += 10;
-  if (seoChecks.hasStructuredData) seoScore += 10;
-  if (seoChecks.mobileResponsive) seoScore += 5;
-  if (seoChecks.pageLoadSpeed === 'fast') seoScore += 5;
+  // Calculate SEO score with detailed breakdown
+  const seoScoreBreakdown = [
+    {
+      category: 'Title Tag',
+      score: seoChecks.hasTitle ? (seoChecks.titleLength && seoChecks.titleLength <= 60 ? 25 : 15) : 0,
+      maxScore: 25,
+      details: seoChecks.hasTitle 
+        ? `Title present (${seoChecks.titleLength} chars). ${seoChecks.titleLength && seoChecks.titleLength <= 60 ? 'Optimal length!' : 'Consider keeping under 60 chars.'}` 
+        : 'Missing title tag - critical for SEO'
+    },
+    {
+      category: 'Meta Description',
+      score: seoChecks.hasMetaDescription ? (seoChecks.metaDescriptionLength && seoChecks.metaDescriptionLength <= 160 ? 25 : 15) : 0,
+      maxScore: 25,
+      details: seoChecks.hasMetaDescription 
+        ? `Meta description present (${seoChecks.metaDescriptionLength} chars). ${seoChecks.metaDescriptionLength && seoChecks.metaDescriptionLength <= 160 ? 'Optimal length!' : 'Consider keeping under 160 chars.'}` 
+        : 'Missing meta description - impacts click-through rate'
+    },
+    {
+      category: 'Content Structure',
+      score: (seoChecks.hasH1 ? 10 : 0) + (seoChecks.hasCanonical ? 5 : 0),
+      maxScore: 15,
+      details: `H1 tag: ${seoChecks.hasH1 ? '✓' : '✗'} | Canonical URL: ${seoChecks.hasCanonical ? '✓' : '✗'}`
+    },
+    {
+      category: 'Technical SEO',
+      score: (seoChecks.hasRobotsMeta ? 5 : 0) + (seoChecks.hasSitemap ? 10 : 0),
+      maxScore: 15,
+      details: `Robots meta: ${seoChecks.hasRobotsMeta ? '✓' : '✗'} | XML Sitemap: ${seoChecks.hasSitemap ? '✓' : '✗'}`
+    },
+    {
+      category: 'Structured Data',
+      score: seoChecks.hasStructuredData ? 10 : 0,
+      maxScore: 10,
+      details: seoChecks.hasStructuredData ? 'Schema.org markup detected' : 'No structured data found - consider adding JSON-LD'
+    },
+    {
+      category: 'Mobile & Performance',
+      score: (seoChecks.mobileResponsive ? 5 : 0) + (seoChecks.pageLoadSpeed === 'fast' ? 5 : seoChecks.pageLoadSpeed === 'moderate' ? 3 : 0),
+      maxScore: 10,
+      details: `Mobile Responsive: ${seoChecks.mobileResponsive ? '✓' : '✗'} | Load Speed: ${seoChecks.pageLoadSpeed}`
+    }
+  ];
   
-  return { ...seoChecks, seoScore };
+  const seoScore = seoScoreBreakdown.reduce((sum, item) => sum + item.score, 0);
+  
+  return { ...seoChecks, seoScore, seoScoreBreakdown };
+}
+
+export function detectNetwork(url: string): NetworkInfo {
+  // Simulated network detection
+  const urlObj = new URL(url);
+  const domain = urlObj.hostname;
+  
+  // Generate random IP address
+  const ipAddress = `${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`;
+  const ipv6Address = Math.random() > 0.5 ? `2001:db8::${Math.floor(Math.random() * 9999).toString(16)}` : undefined;
+  
+  // Common open ports
+  const commonPorts = [
+    { port: 80, service: 'HTTP', status: 'open' as const, protocol: 'TCP' },
+    { port: 443, service: 'HTTPS', status: 'open' as const, protocol: 'TCP' },
+    { port: 22, service: 'SSH', status: Math.random() > 0.5 ? 'open' as const : 'filtered' as const, protocol: 'TCP' },
+    { port: 21, service: 'FTP', status: Math.random() > 0.7 ? 'open' as const : 'closed' as const, protocol: 'TCP' },
+    { port: 25, service: 'SMTP', status: Math.random() > 0.6 ? 'open' as const : 'filtered' as const, protocol: 'TCP' },
+    { port: 53, service: 'DNS', status: 'open' as const, protocol: 'UDP' },
+    { port: 3306, service: 'MySQL', status: Math.random() > 0.8 ? 'open' as const : 'filtered' as const, protocol: 'TCP' },
+    { port: 5432, service: 'PostgreSQL', status: Math.random() > 0.85 ? 'open' as const : 'filtered' as const, protocol: 'TCP' },
+    { port: 8080, service: 'HTTP-Alt', status: Math.random() > 0.7 ? 'open' as const : 'closed' as const, protocol: 'TCP' },
+    { port: 8443, service: 'HTTPS-Alt', status: Math.random() > 0.75 ? 'open' as const : 'closed' as const, protocol: 'TCP' },
+  ].filter(p => p.status === 'open' || Math.random() > 0.5);
+  
+  // DNS records
+  const dnsRecords = [
+    { type: 'A', value: ipAddress },
+    { type: 'NS', value: `ns1.${domain}` },
+    { type: 'NS', value: `ns2.${domain}` },
+    { type: 'MX', value: `mail.${domain}` },
+    { type: 'TXT', value: 'v=spf1 include:_spf.google.com ~all' },
+  ];
+  
+  if (ipv6Address) {
+    dnsRecords.push({ type: 'AAAA', value: ipv6Address });
+  }
+  
+  // Hosting provider
+  const providers = ['AWS', 'Google Cloud', 'Azure', 'DigitalOcean', 'Cloudflare', 'Linode', 'Heroku'];
+  const locations = ['US East', 'US West', 'EU Central', 'Asia Pacific', 'EU West', 'South America'];
+  
+  const hosting = {
+    provider: providers[Math.floor(Math.random() * providers.length)],
+    location: locations[Math.floor(Math.random() * locations.length)],
+    asn: `AS${Math.floor(Math.random() * 90000) + 10000}`
+  };
+  
+  // Connections
+  const thirdPartyDomains = [
+    'googleapis.com',
+    'cloudflare.com',
+    'analytics.google.com',
+    'facebook.com',
+    'cdn.jsdelivr.net',
+    'cdnjs.cloudflare.com',
+    'jquery.com',
+    'bootstrap.com',
+  ];
+  
+  const numThirdParty = Math.floor(Math.random() * 5) + 2;
+  const thirdParty = [];
+  for (let i = 0; i < numThirdParty; i++) {
+    const domain = thirdPartyDomains[Math.floor(Math.random() * thirdPartyDomains.length)];
+    if (!thirdParty.includes(domain)) thirdParty.push(domain);
+  }
+  
+  const connections = {
+    internal: Math.floor(Math.random() * 50) + 10,
+    external: Math.floor(Math.random() * 30) + 5,
+    thirdParty
+  };
+  
+  return {
+    openPorts: commonPorts,
+    ipAddress,
+    ipv6Address,
+    dnsRecords,
+    hosting,
+    connections
+  };
 }
 
 export function detectTechnology(url: string): TechnologyInfo {
@@ -351,8 +496,9 @@ export async function scanUrl(url: string): Promise<ScanResult> {
   if (score < 50) riskLevel = 'High Risk';
   else if (score < 75) riskLevel = 'Medium Risk';
 
-  // Detect technology and SEO
+  // Detect technology, network, and SEO
   const technology = detectTechnology(url);
+  const network = detectNetwork(url);
   const seo = analyzeSEO(url);
   
   // Generate health metrics
@@ -371,6 +517,7 @@ export async function scanUrl(url: string): Promise<ScanResult> {
     riskLevel,
     issues,
     technology,
+    network,
     seo,
     healthMetrics
   };

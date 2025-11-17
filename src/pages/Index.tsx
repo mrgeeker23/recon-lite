@@ -53,15 +53,21 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background py-12 px-4">
-      <div className="max-w-6xl mx-auto space-y-8">
-        <header className="text-center space-y-2">
-          <h1 className="text-5xl font-bold tracking-tight">
+    <div className="min-h-screen bg-background py-8 px-4 sm:py-12">
+      <div className="max-w-7xl mx-auto space-y-6 sm:space-y-8">
+        <header className="text-center space-y-3 py-4">
+          <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight bg-gradient-to-r from-primary via-primary/80 to-primary bg-clip-text text-transparent">
             WEBSITE ANALYZER
           </h1>
-          <p className="text-xl text-muted-foreground">
-            Simple Website Security Scanner
+          <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto">
+            Comprehensive Website Security, SEO & Network Intelligence Scanner
           </p>
+          <div className="flex flex-wrap justify-center gap-2 text-xs sm:text-sm text-muted-foreground">
+            <span className="px-3 py-1 bg-primary/10 rounded-full">Security Analysis</span>
+            <span className="px-3 py-1 bg-primary/10 rounded-full">SEO Audit</span>
+            <span className="px-3 py-1 bg-primary/10 rounded-full">Network Intelligence</span>
+            <span className="px-3 py-1 bg-primary/10 rounded-full">Technology Detection</span>
+          </div>
         </header>
 
         <ScannerInput onScan={handleScan} isScanning={isScanning} />
