@@ -11,9 +11,11 @@ import {
   XCircle, 
   AlertCircle,
   Search,
-  TrendingUp
+  TrendingUp,
+  ExternalLink
 } from 'lucide-react';
 import { NetworkSection } from './NetworkSection';
+import { Button } from './ui/button';
 
 interface ScanResultsProps {
   results: ScanResult[];
@@ -224,6 +226,51 @@ export function ScanResults({ results }: ScanResultsProps) {
           </Card>
 
           <NetworkSection network={result.network} />
+
+          {/* External Reputation Checks */}
+          <Card className="p-6">
+            <h3 className="text-2xl font-bold mb-4 flex items-center gap-2">
+              <ExternalLink className="w-6 h-6" />
+              External Reputation Checks
+            </h3>
+            <p className="text-sm text-muted-foreground mb-4">
+              Click any button below to scan this URL on external security platforms (opens in new tab)
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <Button
+                variant="outline"
+                className="w-full justify-start"
+                onClick={() => window.open(`https://www.virustotal.com/gui/url/${encodeURIComponent(result.url)}`, '_blank')}
+              >
+                <ExternalLink className="w-4 h-4 mr-2" />
+                Scan on VirusTotal
+              </Button>
+              <Button
+                variant="outline"
+                className="w-full justify-start"
+                onClick={() => window.open(`https://urlscan.io/search/#${result.url}`, '_blank')}
+              >
+                <ExternalLink className="w-4 h-4 mr-2" />
+                Check on URLScan.io
+              </Button>
+              <Button
+                variant="outline"
+                className="w-full justify-start"
+                onClick={() => window.open(`https://transparencyreport.google.com/safe-browsing/search?url=${encodeURIComponent(result.url)}`, '_blank')}
+              >
+                <ExternalLink className="w-4 h-4 mr-2" />
+                Check on Google Safe Browsing
+              </Button>
+              <Button
+                variant="outline"
+                className="w-full justify-start"
+                onClick={() => window.open(`https://safeweb.norton.com/report/show?url=${encodeURIComponent(result.url)}`, '_blank')}
+              >
+                <ExternalLink className="w-4 h-4 mr-2" />
+                Check on Norton SafeWeb
+              </Button>
+            </div>
+          </Card>
 
           {/* Technology Detection Section */}
           <Card className="p-6">
