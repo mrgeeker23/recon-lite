@@ -13,6 +13,9 @@ export default {
       },
     },
     extend: {
+      fontFamily: {
+        tech: ['var(--font-tech)'],
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",

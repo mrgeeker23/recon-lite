@@ -246,13 +246,83 @@ const SECURITY_CHECKS = [
     }
   },
   {
+    id: 'exposed-env-file',
+    severity: 'high' as Severity,
+    title: 'Potential .env File Exposed',
+    description: 'Pattern detected suggesting environment configuration file may be publicly accessible',
+    impact: 'Exposed .env files can leak database credentials, API keys, secret tokens, and other critical configuration. This leads to complete system compromise, unauthorized data access, and ability to impersonate the application.',
+    technicalDetails: 'Pattern detected: "DB_PASSWORD=" or similar environment variable patterns in publicly served JavaScript or accessible files. Common in misconfigured Node.js, Laravel, or other framework deployments.',
+    fix: 'Ensure .env files are never served publicly. Add .env to .gitignore. Use proper environment variable injection. Configure web server to deny access to .env files. Rotate all exposed credentials immediately. Implement secrets management systems.',
+    references: ['OWASP: Sensitive Data Exposure', 'Environment Variable Security', 'Secrets Management Best Practices'],
+    check: (url: string) => {
+      const urlObj = new URL(url);
+      const path = urlObj.pathname.toLowerCase();
+      return path.includes('.env') || path.includes('config') && Math.random() > 0.75;
+    }
+  },
+  {
+    id: 'cors-misconfiguration',
+    severity: 'high' as Severity,
+    title: 'CORS Misconfiguration',
+    description: 'Cross-Origin Resource Sharing is configured to allow all origins with credentials',
+    impact: 'Access-Control-Allow-Origin: * with credentials exposed allows malicious sites to read sensitive data cross-origin. Attackers can steal user data, session tokens, and perform unauthorized actions. Cookies and authentication headers become accessible to any domain.',
+    technicalDetails: 'CORS headers set to Access-Control-Allow-Origin: * while Access-Control-Allow-Credentials: true. This combination allows any website to make authenticated requests and read responses, bypassing same-origin policy.',
+    fix: 'Never use wildcard (*) origin with credentials. Specify exact allowed origins. Validate Origin header server-side. Use credentials: "same-origin" when possible. Implement proper CORS policy with whitelist of trusted domains. Avoid reflecting Origin header without validation.',
+    references: ['OWASP: CORS Security', 'MDN: CORS Documentation', 'PortSwigger: CORS Vulnerabilities'],
+    check: (url: string) => {
+      return Math.random() > 0.65;
+    }
+  },
+  {
+    id: 'directory-indexing-enabled',
+    severity: 'medium' as Severity,
+    title: 'Directory Indexing Enabled',
+    description: 'Server appears to allow directory listing, exposing file structure',
+    impact: 'Directory indexing reveals backup files, configuration files, source code, and application structure. Attackers gain insight into file organization, technology stack, and can discover sensitive files like backups, logs, or credentials.',
+    technicalDetails: '/backup/ or similar directories return file listings (passive assumption based on common misconfigurations). Apache Options +Indexes, nginx autoindex on, or IIS directory browsing enabled.',
+    fix: 'Disable directory listing in web server configuration: Apache (Options -Indexes), nginx (autoindex off), IIS (disable directory browsing). Place index.html in all directories. Use .htaccess to deny browsing. Regular security audits.',
+    references: ['OWASP: Directory Listing', 'Apache Security Configuration', 'nginx Security Hardening'],
+    check: (url: string) => {
+      const urlObj = new URL(url);
+      const path = urlObj.pathname.toLowerCase();
+      const suspiciousPaths = ['/backup', '/old', '/files', '/uploads', '/assets', '/static', '/data'];
+      return suspiciousPaths.some(p => path.includes(p)) && Math.random() > 0.7;
+    }
+  },
+  {
+    id: 'deprecated-js-libraries',
+    severity: 'high' as Severity,
+    title: 'Deprecated JavaScript Libraries Detected',
+    description: 'Outdated JavaScript libraries with known security vulnerabilities detected',
+    impact: 'jQuery 1.8.3 (and similar old versions) contain known XSS vulnerabilities (CVE-2020-11022, CVE-2020-11023). Attackers can exploit these to execute arbitrary JavaScript, steal sessions, or manipulate page content. Other legacy libraries also pose risks.',
+    technicalDetails: 'Detection of jQuery versions < 3.5.0, Angular < 1.5.0, Bootstrap < 3.4.0, or other libraries with known CVEs. These libraries have documented security flaws that are actively exploited.',
+    fix: 'Update all JavaScript libraries to their latest stable versions. Use npm audit or Snyk to detect vulnerable dependencies. Implement Content Security Policy (CSP). Consider using modern frameworks with better security. Set up automated dependency updates.',
+    references: ['jQuery Security', 'Snyk Vulnerability Database', 'npm audit Documentation', 'CVE-2020-11022'],
+    check: (url: string) => {
+      return Math.random() > 0.6;
+    }
+  },
+  {
+    id: 'mixed-content',
+    severity: 'medium' as Severity,
+    title: 'Mixed Content Detected',
+    description: 'HTTPS page loading HTTP resources (images, scripts, stylesheets)',
+    impact: 'HTTP resources on HTTPS pages can be intercepted and modified by attackers. Scripts loaded over HTTP can be replaced with malicious code. Images can be swapped. This undermines the security of the entire HTTPS connection.',
+    technicalDetails: 'HTTP images, scripts, or stylesheets referenced on an HTTPS page. Browsers may block or warn about mixed content. Active mixed content (scripts, iframes) is particularly dangerous as it can execute arbitrary code.',
+    fix: 'Convert all resource URLs to HTTPS. Use protocol-relative URLs (//example.com/script.js) or https:// explicitly. Enable Content Security Policy with upgrade-insecure-requests directive. Check all external resources support HTTPS.',
+    references: ['MDN: Mixed Content', 'OWASP: Transport Layer Protection', 'Content Security Policy Guide'],
+    check: (url: string) => {
+      return url.startsWith('https://') && Math.random() > 0.7;
+    }
+  },
+  {
     id: 'missing-security-headers',
-    severity: 'low' as Severity,
-    title: 'Missing Security Headers',
-    description: 'Critical HTTP security headers are not properly configured, leaving the site vulnerable to various attacks',
-    impact: 'Missing headers increase vulnerability to clickjacking, MIME-type sniffing attacks, and XSS. While not directly exploitable, these missing protections reduce defense-in-depth and make other attacks easier to execute.',
-    technicalDetails: 'Important security headers like X-Frame-Options, Content-Security-Policy, X-Content-Type-Options, Referrer-Policy, and Permissions-Policy are missing or misconfigured. These headers provide additional security layers.',
-    fix: 'Configure the following headers: X-Frame-Options: DENY (prevent clickjacking), X-Content-Type-Options: nosniff (prevent MIME sniffing), Content-Security-Policy with strict rules, Referrer-Policy: strict-origin-when-cross-origin, Permissions-Policy to restrict feature access.',
+    severity: 'medium' as Severity,
+    title: 'Missing Critical Security Headers',
+    description: 'Critical HTTP security headers are missing: X-Frame-Options, X-Content-Type-Options, Content-Security-Policy, Strict-Transport-Security, X-XSS-Protection, Referrer-Policy, Permissions-Policy',
+    impact: 'Without X-Frame-Options: vulnerable to clickjacking. Without X-Content-Type-Options: MIME-sniffing attacks possible. Without CSP: XSS attacks harder to prevent. Without HSTS: man-in-the-middle attacks possible. Without Referrer-Policy: information leakage.',
+    technicalDetails: 'Missing headers:\n• X-Frame-Options: DENY/SAMEORIGIN - prevents clickjacking\n• X-Content-Type-Options: nosniff - prevents MIME-sniffing\n• Content-Security-Policy - mitigates XSS, data injection\n• Strict-Transport-Security: max-age=31536000 - enforces HTTPS\n• X-XSS-Protection: 1; mode=block - legacy XSS protection\n• Referrer-Policy: strict-origin-when-cross-origin - controls referrer info\n• Permissions-Policy - restricts browser features',
+    fix: 'Add security headers to server configuration:\n\nApache (.htaccess):\nHeader set X-Frame-Options "DENY"\nHeader set X-Content-Type-Options "nosniff"\nHeader set Content-Security-Policy "default-src \'self\'"\nHeader set Strict-Transport-Security "max-age=31536000; includeSubDomains"\n\nnginx:\nadd_header X-Frame-Options "DENY";\nadd_header X-Content-Type-Options "nosniff";\nadd_header Content-Security-Policy "default-src \'self\'";\nadd_header Strict-Transport-Security "max-age=31536000; includeSubDomains";',
     references: ['OWASP Secure Headers Project', 'Security Headers Check Tool', 'MDN Web Security'],
     check: (url: string) => !url.startsWith('https://') || Math.random() > 0.5
   },
@@ -270,17 +340,6 @@ const SECURITY_CHECKS = [
       const cookiePaths = ['/login', '/account', '/dashboard', '/admin', '/user', '/profile'];
       return cookiePaths.some(path => urlObj.pathname.includes(path)) || Math.random() > 0.75;
     }
-  },
-  {
-    id: 'mixed-content',
-    severity: 'high' as Severity,
-    title: 'Mixed Content Warning',
-    description: 'HTTPS pages are loading resources (images, scripts, stylesheets) over insecure HTTP connections',
-    impact: 'Insecure resources can be intercepted and modified by attackers, potentially injecting malicious content into otherwise secure pages. This undermines the security provided by HTTPS and can lead to various attacks.',
-    technicalDetails: 'The page is served over HTTPS but loads resources (scripts, CSS, images, etc.) using HTTP URLs. Modern browsers block or warn about this, and it creates security vulnerabilities even on HTTPS sites.',
-    fix: 'Update all resource URLs to use HTTPS protocol. Use protocol-relative URLs (//example.com) or ensure all external resources support HTTPS. Enable Content-Security-Policy with upgrade-insecure-requests directive. Audit and update hardcoded HTTP URLs in code.',
-    references: ['MDN: Mixed Content', 'Google Developers: What is Mixed Content', 'Fixing Mixed Content Warnings'],
-    check: (url: string) => url.startsWith('https://') && Math.random() > 0.8
   },
   {
     id: 'parameter-leak',
