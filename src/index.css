@@ -10,44 +10,66 @@ All colors MUST be HSL.
   :root {
     --font-tech: 'Orbitron', sans-serif;
     
-    --background: 0 0% 100%;
-    --foreground: 0 0% 5%;
+    /* Modern gradient-friendly color palette */
+    --background: 220 20% 97%;
+    --foreground: 220 15% 10%;
 
     --card: 0 0% 100%;
-    --card-foreground: 0 0% 5%;
+    --card-foreground: 220 15% 10%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 5%;
+    --popover-foreground: 220 15% 10%;
 
-    --primary: 217 91% 40%;
+    /* Vibrant primary with depth */
+    --primary: 262 80% 60%;
+    --primary-glow: 262 80% 75%;
+    --primary-dark: 262 80% 45%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 220 13% 95%;
-    --secondary-foreground: 0 0% 5%;
+    /* Modern secondary tones */
+    --secondary: 200 20% 92%;
+    --secondary-foreground: 220 15% 10%;
 
-    --muted: 220 13% 95%;
-    --muted-foreground: 220 9% 46%;
+    --muted: 220 15% 93%;
+    --muted-foreground: 220 10% 45%;
 
-    --accent: 220 13% 95%;
-    --accent-foreground: 0 0% 5%;
+    /* Accent with pop */
+    --accent: 340 75% 60%;
+    --accent-glow: 340 75% 75%;
+    --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 84% 60%;
+    --destructive: 0 85% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 220 13% 91%;
-    --input: 220 13% 91%;
-    --ring: 217 91% 60%;
+    --border: 220 13% 88%;
+    --input: 220 13% 90%;
+    --ring: 262 80% 60%;
 
     --radius: 0.5rem;
     
-    --success: 142 76% 36%;
+    /* Enhanced semantic colors */
+    --success: 142 70% 45%;
+    --success-glow: 142 70% 65%;
     --success-foreground: 0 0% 100%;
     
-    --warning: 38 92% 50%;
+    --warning: 38 95% 55%;
+    --warning-glow: 38 95% 70%;
     --warning-foreground: 0 0% 100%;
     
-    --info: 217 91% 60%;
+    --info: 200 85% 55%;
+    --info-glow: 200 85% 70%;
     --info-foreground: 0 0% 100%;
+    
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(262 80% 60%), hsl(262 80% 75%));
+    --gradient-accent: linear-gradient(135deg, hsl(340 75% 60%), hsl(340 75% 75%));
+    --gradient-success: linear-gradient(135deg, hsl(142 70% 45%), hsl(142 70% 65%));
+    --gradient-hero: linear-gradient(135deg, hsl(262 80% 60%) 0%, hsl(200 85% 55%) 100%);
+    
+    /* Shadows with color */
+    --shadow-primary: 0 10px 40px -10px hsl(262 80% 60% / 0.3);
+    --shadow-accent: 0 10px 40px -10px hsl(340 75% 60% / 0.3);
+    --shadow-card: 0 2px 8px hsl(220 15% 10% / 0.08);
 
     --sidebar-background: 0 0% 98%;
 
@@ -67,42 +89,59 @@ All colors MUST be HSL.
   }
 
   .dark {
-    --background: 0 0% 5%;
-    --foreground: 0 0% 98%;
+    --background: 220 20% 8%;
+    --foreground: 220 10% 95%;
 
-    --card: 0 0% 8%;
-    --card-foreground: 0 0% 98%;
+    --card: 220 18% 10%;
+    --card-foreground: 220 10% 95%;
 
-    --popover: 0 0% 8%;
-    --popover-foreground: 0 0% 98%;
+    --popover: 220 18% 10%;
+    --popover-foreground: 220 10% 95%;
 
-    --primary: 217 91% 40%;
+    --primary: 262 80% 65%;
+    --primary-glow: 262 80% 80%;
+    --primary-dark: 262 80% 50%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 220 13% 15%;
-    --secondary-foreground: 0 0% 98%;
+    --secondary: 220 15% 18%;
+    --secondary-foreground: 220 10% 95%;
 
-    --muted: 220 13% 15%;
-    --muted-foreground: 220 9% 65%;
+    --muted: 220 15% 16%;
+    --muted-foreground: 220 10% 70%;
 
-    --accent: 220 13% 15%;
-    --accent-foreground: 0 0% 98%;
+    --accent: 340 75% 65%;
+    --accent-glow: 340 75% 80%;
+    --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 84% 60%;
+    --destructive: 0 85% 65%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 220 13% 15%;
-    --input: 220 13% 15%;
-    --ring: 217 91% 60%;
+    --border: 220 15% 18%;
+    --input: 220 15% 18%;
+    --ring: 262 80% 65%;
     
-    --success: 142 76% 36%;
+    --success: 142 70% 50%;
+    --success-glow: 142 70% 70%;
     --success-foreground: 0 0% 100%;
     
-    --warning: 38 92% 50%;
+    --warning: 38 95% 60%;
+    --warning-glow: 38 95% 75%;
     --warning-foreground: 0 0% 100%;
     
-    --info: 217 91% 60%;
+    --info: 200 85% 60%;
+    --info-glow: 200 85% 75%;
     --info-foreground: 0 0% 100%;
+    
+    /* Dark mode gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(262 80% 65%), hsl(262 80% 80%));
+    --gradient-accent: linear-gradient(135deg, hsl(340 75% 65%), hsl(340 75% 80%));
+    --gradient-success: linear-gradient(135deg, hsl(142 70% 50%), hsl(142 70% 70%));
+    --gradient-hero: linear-gradient(135deg, hsl(262 80% 65%) 0%, hsl(200 85% 60%) 100%);
+    
+    /* Enhanced shadows for dark mode */
+    --shadow-primary: 0 10px 50px -10px hsl(262 80% 65% / 0.4);
+    --shadow-accent: 0 10px 50px -10px hsl(340 75% 65% / 0.4);
+    --shadow-card: 0 2px 12px hsl(0 0% 0% / 0.5);
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
     --sidebar-primary: 224.3 76.3% 48%;

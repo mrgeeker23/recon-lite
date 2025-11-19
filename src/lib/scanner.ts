@@ -56,6 +56,31 @@ export interface NetworkInfo {
     external: number;
     thirdParty: string[];
   };
+  headers?: {
+    securityHeaders: {
+      name: string;
+      present: boolean;
+      value?: string;
+      risk: 'low' | 'medium' | 'high';
+      recommendation?: string;
+    }[];
+    allHeaders: { name: string; value: string }[];
+    score: number;
+  };
+  endpoints?: {
+    endpoints: {
+      path: string;
+      status: number;
+      responseTime: number;
+      contentType?: string;
+      accessible: boolean;
+      risk: 'low' | 'medium' | 'high';
+      details: string;
+    }[];
+    summary: string;
+  };
+  activeScanPerformed?: boolean;
+  activeScanError?: string;
 }
 
 export interface TechnologyInfo {
@@ -1388,11 +1413,17 @@ export function calculateTrustScore(
 }
 
 export async function scanUrl(url: string): Promise<ScanResult> {
+  // Import active scanner dynamically
+  const { performActiveScan } = await import('./activeScanner');
+  
   // Simulate scanning delay
   await new Promise(resolve => setTimeout(resolve, 2000 + Math.random() * 2000));
 
   const issues: SecurityIssue[] = [];
   const passedChecks: PassedCheck[] = [];
+  
+  // Perform active scan in parallel with security checks
+  const activeScanPromise = performActiveScan(url);
   
   // Run all security checks
   for (const check of SECURITY_CHECKS) {
@@ -1433,9 +1464,81 @@ export async function scanUrl(url: string): Promise<ScanResult> {
 
   // Detect technology, network, SEO, and RTI
   const technology = detectTechnology(url);
-  const network = detectNetwork(url);
+  let network = detectNetwork(url);
   const seo = analyzeSEO(url);
   const rti = analyzeRTI(url);
+  
+  // Wait for active scan to complete and integrate results
+  try {
+    const activeScanResult = await activeScanPromise;
+    if (activeScanResult.accessible) {
+      network = {
+        ...network,
+        headers: activeScanResult.headers,
+        endpoints: activeScanResult.endpoints,
+        activeScanPerformed: true
+      };
+      
+      // Adjust score based on header security
+      const headerScore = activeScanResult.headers.score;
+      if (headerScore < 50) {
+        score = Math.max(0, score - 15);
+      } else if (headerScore < 75) {
+        score = Math.max(0, score - 5);
+      }
+      
+      // Add issues for high-risk endpoints
+      const highRiskEndpoints = activeScanResult.endpoints.endpoints.filter(e => e.risk === 'high');
+      if (highRiskEndpoints.length > 0) {
+        issues.push({
+          id: 'exposed-sensitive-endpoints',
+          severity: 'high',
+          title: 'Sensitive Endpoints Exposed',
+          description: `Found ${highRiskEndpoints.length} sensitive endpoint(s) that should not be publicly accessible.`,
+          impact: 'Attackers could gain access to sensitive configuration files, administrative interfaces, or system files.',
+          technicalDetails: `Exposed endpoints: ${highRiskEndpoints.map(e => e.path).join(', ')}`,
+          fix: 'Restrict access to sensitive endpoints using proper authentication and authorization. Move configuration files outside the web root.',
+          references: [
+            'https://owasp.org/www-project-top-ten/2017/A5_2017-Broken_Access_Control',
+            'https://cwe.mitre.org/data/definitions/548.html'
+          ]
+        });
+        score = Math.max(0, score - 20);
+      }
+      
+      // Add issues for missing security headers
+      const missingCriticalHeaders = activeScanResult.headers.securityHeaders
+        .filter(h => !h.present && h.risk === 'high');
+      if (missingCriticalHeaders.length > 0) {
+        issues.push({
+          id: 'missing-security-headers',
+          severity: 'medium',
+          title: 'Missing Security Headers',
+          description: `${missingCriticalHeaders.length} critical security header(s) are missing.`,
+          impact: 'Missing security headers can leave your application vulnerable to various attacks including XSS, clickjacking, and protocol downgrade attacks.',
+          technicalDetails: `Missing headers: ${missingCriticalHeaders.map(h => h.name).join(', ')}`,
+          fix: missingCriticalHeaders.map(h => h.recommendation).join(' '),
+          references: [
+            'https://owasp.org/www-project-secure-headers/',
+            'https://securityheaders.com/'
+          ]
+        });
+      }
+    } else {
+      network = {
+        ...network,
+        activeScanPerformed: false,
+        activeScanError: activeScanResult.errorMessage || 'Active scan failed'
+      };
+    }
+  } catch (error) {
+    console.error('Active scan error:', error);
+    network = {
+      ...network,
+      activeScanPerformed: false,
+      activeScanError: 'Active scan encountered an error'
+    };
+  }
   
   // New advanced analyses
   const portScan = analyzePortScan(url);

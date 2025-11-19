@@ -2,7 +2,7 @@ import { NetworkInfo } from '@/lib/scanner';
 import { Card } from './ui/card';
 import { Badge } from './ui/badge';
 import { Separator } from './ui/separator';
-import { Network, Server, Globe, Radio, Link2, MapPin } from 'lucide-react';
+import { Network, Server, Globe, Radio, Link2, MapPin, Shield, ExternalLink, AlertCircle, CheckCircle, XCircle } from 'lucide-react';
 
 interface NetworkSectionProps {
   network: NetworkInfo;
@@ -134,6 +134,71 @@ export function NetworkSection({ network }: NetworkSectionProps) {
             </div>
           )}
         </div>
+        
+        {/* Active Scan - Security Headers */}
+        {network.activeScanPerformed && network.headers && (
+          <>
+            <Separator />
+            <div className="space-y-3">
+              <h4 className="text-lg font-semibold flex items-center gap-2">
+                <Shield className="w-5 h-5" />
+                Security Headers Analysis
+                <Badge variant={network.headers.score >= 75 ? 'default' : network.headers.score >= 50 ? 'outline' : 'destructive'}>
+                  Score: {network.headers.score}/100
+                </Badge>
+              </h4>
+              <div className="space-y-2 pl-7">
+                {network.headers.securityHeaders.map((header, idx) => (
+                  <div key={idx} className={`p-3 rounded-lg border ${
+                    header.present ? 'bg-success/10 border-success/20' : 
+                    header.risk === 'high' ? 'bg-destructive/10 border-destructive/20' :
+                    header.risk === 'medium' ? 'bg-warning/10 border-warning/20' : 'bg-muted/50'
+                  }`}>
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex-1 space-y-1">
+                        <div className="flex items-center gap-2">
+                          {header.present ? <CheckCircle className="w-4 h-4 text-success" /> : <XCircle className="w-4 h-4 text-destructive" />}
+                          <p className="font-mono text-sm font-semibold">{header.name}</p>
+                        </div>
+                        {header.value && <p className="text-xs text-muted-foreground font-mono pl-6">{header.value}</p>}
+                        {header.recommendation && !header.present && <p className="text-xs text-muted-foreground pl-6">{header.recommendation}</p>}
+                      </div>
+                      <Badge variant={header.present ? 'default' : 'outline'} className="text-xs">{header.present ? 'Present' : 'Missing'}</Badge>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </>
+        )}
+        
+        {/* Active Scan - Endpoints */}
+        {network.activeScanPerformed && network.endpoints && network.endpoints.endpoints.length > 0 && (
+          <>
+            <Separator />
+            <div className="space-y-3">
+              <h4 className="text-lg font-semibold flex items-center gap-2">
+                <ExternalLink className="w-5 h-5" />
+                Discovered Endpoints
+              </h4>
+              <p className="text-sm text-muted-foreground pl-7">{network.endpoints.summary}</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pl-7">
+                {network.endpoints.endpoints.map((endpoint, idx) => (
+                  <div key={idx} className={`p-3 rounded-lg border ${
+                    endpoint.risk === 'high' ? 'bg-destructive/10 border-destructive/20' : 
+                    endpoint.risk === 'medium' ? 'bg-warning/10 border-warning/20' : 'bg-muted/50'
+                  }`}>
+                    <div className="flex items-center justify-between mb-1">
+                      <p className="font-mono text-sm font-semibold">{endpoint.path}</p>
+                      <Badge variant="outline" className="text-xs">{endpoint.status}</Badge>
+                    </div>
+                    <p className="text-xs text-muted-foreground">{endpoint.details}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </>
+        )}
       </div>
     </Card>
   );
