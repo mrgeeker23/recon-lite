@@ -12,7 +12,8 @@ import {
   AlertCircle,
   Search,
   TrendingUp,
-  ExternalLink
+  ExternalLink,
+  Globe
 } from 'lucide-react';
 import { NetworkSection } from './NetworkSection';
 import { Button } from './ui/button';
@@ -269,6 +270,94 @@ export function ScanResults({ results }: ScanResultsProps) {
                 <ExternalLink className="w-4 h-4 mr-2" />
                 Check on Norton SafeWeb
               </Button>
+            </div>
+          </Card>
+
+          {/* RTI Engine (Regional Threat Intelligence) */}
+          <Card className="p-6">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-2xl font-bold flex items-center gap-2">
+                  <Globe className="w-6 h-6" />
+                  ⭐ RTI Engine (Regional Threat Intelligence Engine)
+                </h3>
+                <Badge 
+                  variant={
+                    result.rti.likelihood >= 75 ? 'destructive' : 
+                    result.rti.likelihood >= 50 ? 'secondary' : 
+                    'default'
+                  }
+                  className="text-lg px-4 py-1"
+                >
+                  {result.rti.likelihood}% Likelihood
+                </Badge>
+              </div>
+              
+              <p className="text-sm text-muted-foreground">
+                Trained on APAC-centric and global web threat patterns.
+              </p>
+
+              <div className="p-4 bg-muted rounded-lg">
+                <p className="text-sm font-medium">{result.rti.verdict}</p>
+              </div>
+
+              <Separator />
+
+              <div>
+                <h4 className="font-semibold mb-3">Regional Indicators</h4>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  {result.rti.regionalIndicators.map((indicator, idx) => (
+                    <div key={idx} className="p-3 border rounded-lg">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-sm font-medium">{indicator.indicator}</span>
+                        <Badge 
+                          variant={
+                            indicator.risk === 'high' ? 'destructive' : 
+                            indicator.risk === 'medium' ? 'secondary' : 
+                            'default'
+                          }
+                          className="text-xs"
+                        >
+                          {indicator.risk}
+                        </Badge>
+                      </div>
+                      <p className="text-xs text-muted-foreground">{indicator.value}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <Separator />
+
+              <div>
+                <h4 className="font-semibold mb-3">APAC Threat Pattern Analysis</h4>
+                <p className="text-xs text-muted-foreground mb-3">
+                  Checking for: Cheap shared hosting (cPanel, Plesk) • Outdated WordPress • External JS from unknown .asia/.pw domains • 
+                  Redirects to scam campaigns • APAC phishing kit structures • SEA threat group JS naming • Missing TLS • Gov-like phishing clones
+                </p>
+                <div className="space-y-3">
+                  {result.rti.detectedPatterns.map((pattern, idx) => (
+                    <div 
+                      key={idx} 
+                      className={`p-3 border rounded-lg ${
+                        pattern.detected ? 'border-destructive bg-destructive/5' : 'border-border'
+                      }`}
+                    >
+                      <div className="flex items-start gap-2">
+                        {pattern.detected ? (
+                          <XCircle className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
+                        ) : (
+                          <CheckCircle2 className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <div className="font-medium text-sm mb-1">{pattern.category}</div>
+                          <p className="text-xs text-muted-foreground">{pattern.details}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           </Card>
 
