@@ -8,6 +8,8 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
+    --font-tech: 'Orbitron', sans-serif;
+    
     --background: 0 0% 100%;
     --foreground: 0 0% 5%;
 
