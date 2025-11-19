@@ -74,6 +74,21 @@ export interface PassedCheck {
   description: string;
 }
 
+export interface RTIInfo {
+  likelihood: number;
+  detectedPatterns: {
+    category: string;
+    detected: boolean;
+    details: string;
+  }[];
+  regionalIndicators: {
+    indicator: string;
+    value: string;
+    risk: 'low' | 'medium' | 'high';
+  }[];
+  verdict: string;
+}
+
 export interface ScanResult {
   url: string;
   score: number;
@@ -83,6 +98,7 @@ export interface ScanResult {
   technology: TechnologyInfo;
   network: NetworkInfo;
   seo: SEOInfo;
+  rti: RTIInfo;
   healthMetrics: {
     uptime: string;
     responseTime: number;
@@ -634,6 +650,157 @@ export function detectTechnology(url: string): TechnologyInfo {
   return tech;
 }
 
+export function analyzeRTI(url: string): RTIInfo {
+  // Simulated RTI (Regional Threat Intelligence) analysis for APAC patterns
+  const urlObj = new URL(url);
+  const domain = urlObj.hostname.toLowerCase();
+  const tld = domain.split('.').pop() || '';
+  
+  // APAC TLDs
+  const apacTlds = ['in', 'ph', 'id', 'my', 'sg', 'asia', 'pw', 'cn', 'tw', 'kr', 'jp', 'th', 'vn'];
+  const isApacTld = apacTlds.includes(tld);
+  
+  // Cheap hosting detection (simulated)
+  const cheapHostingProviders = ['cpanel', 'plesk', 'shared', 'hostinger', 'godaddy'];
+  const hasCheapHosting = Math.random() > 0.7;
+  
+  // WordPress detection
+  const hasWordPress = Math.random() > 0.5;
+  const wpOutdated = hasWordPress && Math.random() > 0.6;
+  
+  // External JS from suspicious TLDs
+  const suspiciousTlds = ['.asia', '.pw', '.tk', '.ml', '.ga'];
+  const hasSuspiciousJS = Math.random() > 0.7;
+  
+  // Redirect detection
+  const hasRedirects = Math.random() > 0.65;
+  
+  // APAC phishing patterns
+  const phishingPatterns = ['/verify/', '/otp/', '/login/secure/', '/pan-update/', '/kyc-update/'];
+  const hasPhishingPattern = Math.random() > 0.75;
+  
+  // SEA threat group JS naming
+  const hasThreatJS = Math.random() > 0.8;
+  
+  // Missing TLS on subdomains
+  const missingTLS = !url.startsWith('https://') || Math.random() > 0.85;
+  
+  // Gov phishing clone detection
+  const hasGovClone = Math.random() > 0.8;
+  
+  // Build detected patterns
+  const detectedPatterns = [
+    {
+      category: 'Cheap Shared Hosting',
+      detected: hasCheapHosting,
+      details: hasCheapHosting 
+        ? 'Detected cPanel/Plesk hosting environment commonly used in APAC scam operations'
+        : 'No cheap shared hosting indicators detected'
+    },
+    {
+      category: 'Outdated WordPress',
+      detected: wpOutdated,
+      details: wpOutdated 
+        ? 'Outdated WordPress version detected - common in India/SEA threat campaigns'
+        : hasWordPress 
+          ? 'WordPress detected but appears up-to-date'
+          : 'No WordPress installation detected'
+    },
+    {
+      category: 'Suspicious External JS',
+      detected: hasSuspiciousJS,
+      details: hasSuspiciousJS 
+        ? `External JavaScript loaded from unknown ${suspiciousTlds[Math.floor(Math.random() * suspiciousTlds.length)]} domain`
+        : 'No suspicious external JavaScript sources detected'
+    },
+    {
+      category: 'Redirect Patterns',
+      detected: hasRedirects,
+      details: hasRedirects 
+        ? 'Multiple redirects to external domains detected - common scam tactic'
+        : 'No suspicious redirect patterns detected'
+    },
+    {
+      category: 'APAC Phishing Kit Structure',
+      detected: hasPhishingPattern,
+      details: hasPhishingPattern 
+        ? `URL structure matches known APAC phishing kits: ${phishingPatterns[Math.floor(Math.random() * phishingPatterns.length)]}`
+        : 'No APAC phishing kit patterns detected'
+    },
+    {
+      category: 'SEA Threat Group JS Naming',
+      detected: hasThreatJS,
+      details: hasThreatJS 
+        ? 'JavaScript naming patterns match known SEA threat group fingerprints (e.g., main.min.9832.js, validate.sec.js)'
+        : 'No threat group JavaScript naming patterns detected'
+    },
+    {
+      category: 'Missing TLS',
+      detected: missingTLS,
+      details: missingTLS 
+        ? 'Subdomains or main domain missing TLS encryption - security risk'
+        : 'TLS properly configured across all detected endpoints'
+    },
+    {
+      category: 'Gov Phishing Clone',
+      detected: hasGovClone,
+      details: hasGovClone 
+        ? 'Design elements match APAC government portal phishing clones (banking, post, gov services)'
+        : 'No government phishing clone indicators detected'
+    }
+  ];
+  
+  // Regional indicators
+  const regionalIndicators = [
+    {
+      indicator: 'Country TLD',
+      value: isApacTld ? `APAC Region (.${tld})` : `Non-APAC (.${tld})`,
+      risk: isApacTld ? ('medium' as const) : ('low' as const)
+    },
+    {
+      indicator: 'Hosting Provider',
+      value: hasCheapHosting ? 'Cheap Shared Hosting' : 'Standard Hosting',
+      risk: hasCheapHosting ? ('high' as const) : ('low' as const)
+    },
+    {
+      indicator: 'Domain Age',
+      value: Math.random() > 0.5 ? 'Recently Registered' : 'Established Domain',
+      risk: Math.random() > 0.5 ? ('high' as const) : ('low' as const)
+    }
+  ];
+  
+  // Calculate likelihood score
+  let likelihood = 0;
+  detectedPatterns.forEach(pattern => {
+    if (pattern.detected) likelihood += 12.5;
+  });
+  
+  // Adjust for APAC TLD
+  if (isApacTld) likelihood += 10;
+  
+  // Cap at 100
+  likelihood = Math.min(100, Math.round(likelihood));
+  
+  // Determine verdict
+  let verdict = '';
+  if (likelihood >= 75) {
+    verdict = 'High likelihood of APAC-region threat patterns detected. Exercise extreme caution.';
+  } else if (likelihood >= 50) {
+    verdict = 'Moderate APAC threat indicators present. Further investigation recommended.';
+  } else if (likelihood >= 25) {
+    verdict = 'Some regional patterns detected, but overall risk appears low.';
+  } else {
+    verdict = 'Minimal APAC threat patterns detected. Site appears clean.';
+  }
+  
+  return {
+    likelihood,
+    detectedPatterns,
+    regionalIndicators,
+    verdict
+  };
+}
+
 export async function scanUrl(url: string): Promise<ScanResult> {
   // Simulate scanning delay
   await new Promise(resolve => setTimeout(resolve, 2000 + Math.random() * 2000));
@@ -678,10 +845,11 @@ export async function scanUrl(url: string): Promise<ScanResult> {
   if (score < 50) riskLevel = 'High Risk';
   else if (score < 75) riskLevel = 'Medium Risk';
 
-  // Detect technology, network, and SEO
+  // Detect technology, network, SEO, and RTI
   const technology = detectTechnology(url);
   const network = detectNetwork(url);
   const seo = analyzeSEO(url);
+  const rti = analyzeRTI(url);
   
   // Generate health metrics
   const healthMetrics = {
@@ -702,6 +870,7 @@ export async function scanUrl(url: string): Promise<ScanResult> {
     technology,
     network,
     seo,
+    rti,
     healthMetrics
   };
 }
