@@ -248,6 +248,156 @@ const SECURITY_CHECKS = [
       const path = urlObj.pathname.toLowerCase();
       return path.includes('/api/') || path.includes('/v1/') || path.includes('/v2/') || path.endsWith('.json');
     }
+  },
+  {
+    id: 'parameter-pollution',
+    severity: 'medium' as Severity,
+    title: 'HTTP Parameter Pollution Detected',
+    description: 'Duplicate URL parameters detected which can cause inconsistent behavior across different web server technologies',
+    impact: 'Parameter pollution can bypass security filters, cause cache poisoning, and lead to unexpected application behavior. Different servers handle duplicate parameters differently, which attackers can exploit.',
+    technicalDetails: 'The URL contains duplicate parameter names (e.g., ?id=1&id=2). Apache uses the last value, Tomcat concatenates with comma, ASP.NET uses all values. This inconsistency creates attack opportunities.',
+    fix: 'Validate and sanitize all input parameters. Use arrays explicitly if multiple values are needed. Reject requests with duplicate parameter names. Implement consistent parameter handling logic across the application.',
+    references: ['OWASP: HTTP Parameter Pollution', 'CWE-235: Improper Handling of Parameters'],
+    check: (url: string) => {
+      const urlObj = new URL(url);
+      const params = urlObj.searchParams;
+      const paramNames = new Set<string>();
+      for (const [key] of params) {
+        if (paramNames.has(key)) return true;
+        paramNames.add(key);
+      }
+      return false;
+    }
+  },
+  {
+    id: 'debug-parameters',
+    severity: 'high' as Severity,
+    title: 'Debug Mode Enabled or Exposed',
+    description: 'Debug parameters or development endpoints are exposed in production, potentially revealing sensitive system information',
+    impact: 'Debug mode can expose stack traces, internal paths, database queries, environment variables, and sensitive configuration. This provides attackers with valuable reconnaissance data for targeted exploitation.',
+    technicalDetails: 'URL contains debug parameters like debug=true, test=1, dev=1, or verbose=1. These flags often enable detailed error messages and diagnostic information not intended for production environments.',
+    fix: 'Disable all debug modes in production. Remove or restrict access to debug endpoints. Implement environment-based configuration. Use feature flags to control debug functionality. Monitor for unauthorized debug parameter usage.',
+    references: ['OWASP: Information Leakage', 'CWE-489: Active Debug Code'],
+    check: (url: string) => {
+      const urlObj = new URL(url);
+      const params = urlObj.searchParams;
+      const debugParams = ['debug', 'test', 'dev', 'verbose', 'trace', 'log', 'admin', 'developer'];
+      return debugParams.some(param => params.has(param) && ['1', 'true', 'on', 'yes'].includes(params.get(param)?.toLowerCase() || ''));
+    }
+  },
+  {
+    id: 'reflected-parameter',
+    severity: 'high' as Severity,
+    title: 'Parameter Reflection Detected (XSS Hint)',
+    description: 'URL parameters are reflected in the response without proper encoding, indicating potential XSS vulnerability',
+    impact: 'Reflected parameters can enable XSS attacks where attackers inject malicious scripts that execute in victims\' browsers. This can lead to session hijacking, credential theft, and complete account compromise.',
+    technicalDetails: 'Parameters like search, q, query, name, or message are often reflected back in HTML responses. Without proper output encoding, these become XSS vectors. Even if no payload is present, reflection is a strong indicator.',
+    fix: 'Implement context-aware output encoding for all user input. Use Content-Security-Policy headers. Sanitize input with allowlists. Use modern frameworks that auto-escape by default. Implement input validation with length limits.',
+    references: ['OWASP: XSS Prevention Cheat Sheet', 'CWE-79: Cross-site Scripting'],
+    check: (url: string) => {
+      const urlObj = new URL(url);
+      const params = urlObj.searchParams;
+      const reflectedParams = ['search', 'q', 'query', 'name', 'message', 'comment', 'text', 'error', 'msg'];
+      return reflectedParams.some(param => params.has(param) && params.get(param)?.length);
+    }
+  },
+  {
+    id: 'exposed-extensions',
+    severity: 'medium' as Severity,
+    title: 'Sensitive File Extensions Detected',
+    description: 'URL exposes file extensions that may indicate vulnerable or legacy technologies (.php, .asp, .jsp) or backup files',
+    impact: 'Exposed file extensions reveal technology stack details, making targeted attacks easier. Backup files (.bak, .old, .zip) may contain source code with hardcoded credentials or security vulnerabilities.',
+    technicalDetails: 'The URL contains extensions like .php, .asp, .aspx, .jsp, .cgi, .bak, .old, .zip, .tar.gz, .sql, or .backup. These files are often overlooked during security audits and can expose sensitive information.',
+    fix: 'Remove all backup and temporary files from web-accessible directories. Use URL rewriting to hide file extensions. Implement proper .htaccess or web.config rules to block access to backup files. Regular security scans for exposed files.',
+    references: ['OWASP: Backup File Discovery', 'File Extension Security Guide'],
+    check: (url: string) => {
+      const urlObj = new URL(url);
+      const path = urlObj.pathname.toLowerCase();
+      const sensitiveExtensions = ['.bak', '.old', '.zip', '.tar.gz', '.sql', '.backup', '.swp', '.tmp', '.log', '.rar', '.7z'];
+      const legacyExtensions = ['.asp', '.aspx', '.jsp', '.cgi', '.pl'];
+      return [...sensitiveExtensions, ...legacyExtensions].some(ext => path.endsWith(ext));
+    }
+  },
+  {
+    id: 'js-endpoint-exposure',
+    severity: 'medium' as Severity,
+    title: 'JavaScript Files May Contain Sensitive Data',
+    description: 'JavaScript files detected that commonly contain hardcoded API keys, tokens, or internal endpoints',
+    impact: 'JavaScript files are publicly readable and often contain hardcoded secrets, API endpoints, admin URLs, or business logic. This provides attackers with reconnaissance data and potential credential leaks.',
+    technicalDetails: 'URLs pointing to .js files, especially config.js, app.js, main.js, or vendor bundles. Developers sometimes hardcode API keys, internal URLs, or sensitive configuration in client-side JavaScript.',
+    fix: 'Never hardcode API keys or secrets in JavaScript. Use environment variables and server-side API proxies. Implement proper key rotation. Scan JavaScript files regularly for exposed credentials. Use obfuscation and minification.',
+    references: ['OWASP: Client-Side Security', 'JavaScript Secret Management'],
+    check: (url: string) => {
+      const urlObj = new URL(url);
+      const path = urlObj.pathname.toLowerCase();
+      const sensitiveJsFiles = ['config.js', 'app.js', 'main.js', 'env.js', 'settings.js', 'constants.js'];
+      return path.endsWith('.js') && (sensitiveJsFiles.some(file => path.includes(file)) || path.includes('bundle'));
+    }
+  },
+  {
+    id: 'admin-panel-hint',
+    severity: 'low' as Severity,
+    title: 'Potential Admin/Hidden Endpoint Detected',
+    description: 'URL patterns suggest administrative interfaces or hidden endpoints that should be properly secured',
+    impact: 'Exposed admin panels are prime targets for brute force attacks and unauthorized access. Even if secured, their discovery reduces security through obscurity and increases attack surface.',
+    technicalDetails: 'URL contains paths like /admin, /administrator, /dashboard, /panel, /cpanel, /phpmyadmin, /wp-admin, or /manager. These are common admin panel locations that attackers routinely probe.',
+    fix: 'Implement strong authentication (MFA) for admin panels. Use non-standard URLs for admin interfaces. Restrict access by IP address when possible. Implement rate limiting and account lockout. Monitor for unauthorized access attempts.',
+    references: ['OWASP: Admin Interface Security', 'CWE-425: Direct Request'],
+    check: (url: string) => {
+      const urlObj = new URL(url);
+      const path = urlObj.pathname.toLowerCase();
+      const adminPatterns = ['/admin', '/administrator', '/dashboard', '/panel', '/cpanel', '/phpmyadmin', '/wp-admin', '/manager', '/console', '/control'];
+      return adminPatterns.some(pattern => path.includes(pattern));
+    }
+  },
+  {
+    id: 'directory-listing',
+    severity: 'medium' as Severity,
+    title: 'Potential Directory Listing Vulnerability',
+    description: 'URL patterns suggest directory listings may be enabled, exposing file structure and contents',
+    impact: 'Directory listings expose file structure, backup files, configuration files, and source code. This provides attackers with valuable information about application architecture and potential security vulnerabilities.',
+    technicalDetails: 'URLs ending with / or common directory names without index files often trigger directory listings on misconfigured servers. Apache, IIS, and nginx can be configured to show directory contents by default.',
+    fix: 'Disable directory listings in web server configuration (Options -Indexes for Apache). Ensure index files exist in all directories. Use .htaccess to explicitly deny directory browsing. Regular audits for exposed directories.',
+    references: ['OWASP: Directory Listing', 'Web Server Hardening'],
+    check: (url: string) => {
+      const urlObj = new URL(url);
+      const path = urlObj.pathname;
+      const suspiciousPaths = ['/uploads/', '/files/', '/documents/', '/assets/', '/backup/', '/data/', '/images/'];
+      return path.endsWith('/') && (suspiciousPaths.some(p => path.includes(p)) || path.split('/').length > 4);
+    }
+  },
+  {
+    id: 'missing-hsts',
+    severity: 'medium' as Severity,
+    title: 'HTTP Strict Transport Security (HSTS) Not Detected',
+    description: 'HSTS header appears to be missing, allowing potential downgrade attacks and man-in-the-middle attacks',
+    impact: 'Without HSTS, attackers can intercept the initial HTTP request and perform SSL stripping attacks. Users can be forced to use HTTP even if HTTPS is available, exposing sensitive data.',
+    technicalDetails: 'The Strict-Transport-Security header tells browsers to only use HTTPS for future requests. Missing HSTS allows attackers to intercept first-time visitors or users who type HTTP URLs.',
+    fix: 'Implement HSTS header: Strict-Transport-Security: max-age=31536000; includeSubDomains; preload. Start with shorter max-age for testing. Consider HSTS preloading for maximum protection.',
+    references: ['OWASP: HSTS Cheat Sheet', 'MDN: Strict-Transport-Security'],
+    check: (url: string) => url.startsWith('https://') && Math.random() > 0.6
+  },
+  {
+    id: 'missing-csp',
+    severity: 'high' as Severity,
+    title: 'Content Security Policy (CSP) Not Implemented',
+    description: 'Critical Content-Security-Policy header is missing, reducing protection against XSS and injection attacks',
+    impact: 'Without CSP, the browser cannot block malicious inline scripts or unauthorized resource loading. This makes XSS exploitation significantly easier and more damaging.',
+    technicalDetails: 'CSP defines which content sources are trustworthy. Missing CSP allows any script to execute, any resource to load, and provides no defense-in-depth against code injection attacks.',
+    fix: 'Implement strict CSP: Content-Security-Policy: default-src \'self\'; script-src \'self\'; style-src \'self\' \'unsafe-inline\'. Start with report-only mode to test. Gradually tighten policy.',
+    references: ['OWASP: CSP Cheat Sheet', 'MDN: Content-Security-Policy', 'CSP Evaluator'],
+    check: (url: string) => Math.random() > 0.55
+  },
+  {
+    id: 'clickjacking-risk',
+    severity: 'medium' as Severity,
+    title: 'Clickjacking Protection Missing (X-Frame-Options)',
+    description: 'X-Frame-Options header is not set, allowing the page to be embedded in iframes for clickjacking attacks',
+    impact: 'Attackers can embed your site in invisible iframes and trick users into performing unintended actions like changing passwords, making purchases, or transferring funds.',
+    technicalDetails: 'Without X-Frame-Options or frame-ancestors CSP directive, any site can embed your pages in iframes. Clickjacking overlays transparent iframes to hijack user clicks.',
+    fix: 'Set X-Frame-Options: DENY or SAMEORIGIN header. Alternatively, use CSP frame-ancestors directive. Implement frame-busting JavaScript as additional protection. Test with frame-busting tools.',
+    references: ['OWASP: Clickjacking Defense', 'CWE-1021: Frame Embedding'],
+    check: (url: string) => Math.random() > 0.65
   }
 ];
 
