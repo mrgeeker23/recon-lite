@@ -2,6 +2,7 @@ import { ScanResult, PassedCheck, getSeverityIcon, getSeverityColor } from '@/li
 import { Card } from './ui/card';
 import { Badge } from './ui/badge';
 import { Separator } from './ui/separator';
+import { Progress } from './ui/progress';
 import { 
   Shield, 
   Clock, 
@@ -13,7 +14,16 @@ import {
   Search,
   TrendingUp,
   ExternalLink,
-  Globe
+  Globe,
+  Server,
+  Code,
+  FileWarning,
+  Target,
+  Tag,
+  Eye,
+  Lock,
+  Unlock,
+  AlertTriangle
 } from 'lucide-react';
 import { NetworkSection } from './NetworkSection';
 import { Button } from './ui/button';
@@ -113,6 +123,357 @@ export function ScanResults({ results }: ScanResultsProps) {
                 </div>
               )}
             </div>
+          </Card>
+
+          {/* Trust Score Circle */}
+          <Card className="p-6">
+            <h3 className="text-2xl font-bold mb-6 flex items-center gap-2">
+              <Shield className="w-6 h-6" />
+              Overall Trust Score
+            </h3>
+            <div className="flex items-center justify-center">
+              <div className="relative w-48 h-48">
+                <svg className="w-full h-full transform -rotate-90">
+                  <circle
+                    cx="96"
+                    cy="96"
+                    r="80"
+                    stroke="currentColor"
+                    strokeWidth="12"
+                    fill="none"
+                    className="text-muted"
+                  />
+                  <circle
+                    cx="96"
+                    cy="96"
+                    r="80"
+                    stroke="currentColor"
+                    strokeWidth="12"
+                    fill="none"
+                    strokeDasharray={`${2 * Math.PI * 80}`}
+                    strokeDashoffset={`${2 * Math.PI * 80 * (1 - result.trustScore / 100)}`}
+                    className={
+                      result.trustScore >= 70 ? 'text-success' :
+                      result.trustScore >= 40 ? 'text-warning' :
+                      'text-destructive'
+                    }
+                    strokeLinecap="round"
+                  />
+                </svg>
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                  <span className="text-5xl font-bold">{result.trustScore}</span>
+                  <span className="text-sm text-muted-foreground">/ 100</span>
+                </div>
+              </div>
+            </div>
+            <p className="text-center text-sm text-muted-foreground mt-4">
+              {result.trustScore >= 70 ? 'Site appears trustworthy' :
+               result.trustScore >= 40 ? 'Exercise caution - some risk indicators present' :
+               'High risk - avoid interaction'}
+            </p>
+          </Card>
+
+          {/* Suspicion Tags */}
+          {result.suspicionTags.length > 0 && (
+            <Card className="p-6">
+              <h3 className="text-2xl font-bold mb-4 flex items-center gap-2">
+                <Tag className="w-6 h-6" />
+                Site Classification
+              </h3>
+              <div className="flex flex-wrap gap-2">
+                {result.suspicionTags.map((tag, idx) => {
+                  const isDangerous = tag === 'Scam Template' || tag === 'Phishing Kit';
+                  const isWarning = tag === 'Outdated WordPress Theme' || tag === 'Government Clone';
+                  return (
+                    <Badge 
+                      key={idx}
+                      variant={isDangerous ? 'destructive' : isWarning ? 'secondary' : 'default'}
+                      className="text-sm px-3 py-1"
+                    >
+                      {tag}
+                    </Badge>
+                  );
+                })}
+              </div>
+            </Card>
+          )}
+
+          {/* Risk Themes */}
+          {result.riskThemes.length > 0 && (
+            <Card className="p-6">
+              <h3 className="text-2xl font-bold mb-4 flex items-center gap-2">
+                <Target className="w-6 h-6" />
+                Risk Themes Analysis
+              </h3>
+              <div className="space-y-4">
+                {result.riskThemes.map((theme, idx) => (
+                  <div key={idx} className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Badge 
+                          variant={
+                            theme.severity === 'critical' ? 'destructive' :
+                            theme.severity === 'high' ? 'destructive' :
+                            theme.severity === 'medium' ? 'secondary' : 'default'
+                          }
+                        >
+                          {theme.severity.toUpperCase()}
+                        </Badge>
+                        <span className="font-semibold">{theme.theme}</span>
+                      </div>
+                      <span className="text-sm font-bold">{theme.score}/100</span>
+                    </div>
+                    <Progress value={theme.score} className="h-2" />
+                    <ul className="text-sm text-muted-foreground space-y-1 ml-4">
+                      {theme.findings.map((finding, fIdx) => (
+                        <li key={fIdx} className="list-disc">{finding}</li>
+                      ))}
+                    </ul>
+                    {idx < result.riskThemes.length - 1 && <Separator className="mt-4" />}
+                  </div>
+                ))}
+              </div>
+            </Card>
+          )}
+
+          {/* Port Scan Summary */}
+          <Card className="p-6">
+            <h3 className="text-2xl font-bold mb-4 flex items-center gap-2">
+              <Server className="w-6 h-6" />
+              Port Scan Summary (Passive Only)
+            </h3>
+            <p className="text-sm text-muted-foreground mb-4">{result.portScan.summary}</p>
+            {result.portScan.exposedPorts.length > 0 && (
+              <div className="space-y-3">
+                {result.portScan.exposedPorts.map((port, idx) => (
+                  <div
+                    key={idx}
+                    className={`p-4 rounded-lg border ${
+                      port.risk === 'high' ? 'bg-destructive/10 border-destructive/30' :
+                      port.risk === 'medium' ? 'bg-warning/10 border-warning/30' :
+                      'bg-muted/10 border-border'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-lg">{port.port}</span>
+                        <Badge variant="outline">{port.service}</Badge>
+                        <Badge variant={
+                          port.risk === 'high' ? 'destructive' :
+                          port.risk === 'medium' ? 'secondary' : 'default'
+                        }>
+                          {port.risk.toUpperCase()}
+                        </Badge>
+                      </div>
+                      {port.risk === 'high' ? <Unlock className="w-5 h-5 text-destructive" /> : <Lock className="w-5 h-5" />}
+                    </div>
+                    <p className="text-sm text-muted-foreground">{port.exposureHint}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </Card>
+
+          {/* Framework & Plugin Exposure Risk */}
+          <Card className="p-6">
+            <h3 className="text-2xl font-bold mb-4 flex items-center gap-2">
+              <Code className="w-6 h-6" />
+              Framework & Platform Risk
+            </h3>
+            {result.frameworkRisk.framework && (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-semibold text-lg">{result.frameworkRisk.framework}</p>
+                    <p className="text-sm text-muted-foreground">{result.frameworkRisk.version}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm text-muted-foreground">Risk Score</p>
+                    <p className="text-3xl font-bold text-destructive">{result.frameworkRisk.riskScore}/100</p>
+                  </div>
+                </div>
+                <Progress value={result.frameworkRisk.riskScore} className="h-2" />
+                <Separator />
+                <div>
+                  <p className="font-semibold mb-2">Known Vulnerabilities:</p>
+                  <ul className="space-y-1">
+                    {result.frameworkRisk.vulnerabilities.map((vuln, idx) => (
+                      <li key={idx} className="text-sm text-muted-foreground flex items-start gap-2">
+                        <AlertTriangle className="w-4 h-4 text-warning flex-shrink-0 mt-0.5" />
+                        {vuln}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                <div className="p-3 bg-muted/50 rounded-lg">
+                  <p className="text-sm font-semibold mb-1">Recommendation:</p>
+                  <p className="text-sm text-muted-foreground">{result.frameworkRisk.recommendation}</p>
+                </div>
+              </div>
+            )}
+          </Card>
+
+          {/* JavaScript Security Analysis */}
+          <Card className="p-6">
+            <h3 className="text-2xl font-bold mb-4 flex items-center gap-2">
+              <FileWarning className="w-6 h-6" />
+              JavaScript Security Analysis
+            </h3>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="font-semibold">Risk Level:</span>
+                <Badge variant={
+                  result.jsSecurity.riskLevel === 'high' ? 'destructive' :
+                  result.jsSecurity.riskLevel === 'medium' ? 'secondary' : 'default'
+                }>
+                  {result.jsSecurity.riskLevel.toUpperCase()}
+                </Badge>
+              </div>
+              
+              {result.jsSecurity.exposedSecrets.length > 0 && (
+                <>
+                  <Separator />
+                  <div>
+                    <p className="font-semibold mb-3">Exposed Secrets & Credentials:</p>
+                    <div className="space-y-2">
+                      {result.jsSecurity.exposedSecrets.map((secret, idx) => (
+                        <div
+                          key={idx}
+                          className={`p-3 rounded-lg border ${
+                            secret.severity === 'high' ? 'bg-destructive/10 border-destructive/30' :
+                            secret.severity === 'medium' ? 'bg-warning/10 border-warning/30' :
+                            'bg-muted/10 border-border'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="font-semibold text-sm">{secret.type}</span>
+                            <Badge variant={secret.severity === 'high' ? 'destructive' : 'secondary'} className="text-xs">
+                              {secret.severity}
+                            </Badge>
+                          </div>
+                          <p className="text-xs text-muted-foreground mb-1">{secret.location}</p>
+                          <code className="text-xs bg-background/50 px-2 py-1 rounded">{secret.preview}</code>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </>
+              )}
+              
+              {result.jsSecurity.suspiciousPatterns.length > 0 && (
+                <>
+                  <Separator />
+                  <div>
+                    <p className="font-semibold mb-2">Suspicious Patterns:</p>
+                    <ul className="space-y-1">
+                      {result.jsSecurity.suspiciousPatterns.map((pattern, idx) => (
+                        <li key={idx} className="text-sm text-muted-foreground flex items-center gap-2">
+                          <AlertCircle className="w-4 h-4 text-warning" />
+                          {pattern}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </>
+              )}
+            </div>
+          </Card>
+
+          {/* Scam Template Detection */}
+          <Card className="p-6">
+            <h3 className="text-2xl font-bold mb-4 flex items-center gap-2">
+              <Eye className="w-6 h-6" />
+              Scam Template Detection
+            </h3>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="font-semibold">Template Match:</span>
+                <span className="text-2xl font-bold">{result.scamDetection.templateMatch}%</span>
+              </div>
+              <Progress value={result.scamDetection.templateMatch} className="h-3" />
+              
+              <div className="p-4 bg-muted/50 rounded-lg">
+                <p className="text-sm font-semibold mb-2">Analysis Verdict:</p>
+                <p className="text-sm text-muted-foreground">{result.scamDetection.overallVerdict}</p>
+              </div>
+              
+              {result.scamDetection.matchedTemplates.length > 0 && (
+                <>
+                  <Separator />
+                  <div>
+                    <p className="font-semibold mb-2">Matched Scam Templates:</p>
+                    <div className="flex flex-wrap gap-2">
+                      {result.scamDetection.matchedTemplates.map((template, idx) => (
+                        <Badge key={idx} variant="destructive">{template}</Badge>
+                      ))}
+                    </div>
+                  </div>
+                </>
+              )}
+              
+              <Separator />
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">JS Kit Match</p>
+                  <div className="flex items-center gap-2">
+                    {result.scamDetection.jsKitMatch ? (
+                      <>
+                        <XCircle className="w-5 h-5 text-destructive" />
+                        <span className="font-semibold text-destructive">Detected</span>
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle2 className="w-5 h-5 text-success" />
+                        <span className="font-semibold text-success">Clean</span>
+                      </>
+                    )}
+                  </div>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">Redirect Behavior</p>
+                  <Badge variant={
+                    result.scamDetection.redirectBehavior === 'dangerous' ? 'destructive' :
+                    result.scamDetection.redirectBehavior === 'suspicious' ? 'secondary' : 'default'
+                  }>
+                    {result.scamDetection.redirectBehavior.toUpperCase()}
+                  </Badge>
+                </div>
+              </div>
+            </div>
+          </Card>
+
+          {/* Passive Crawl Results */}
+          <Card className="p-6">
+            <h3 className="text-2xl font-bold mb-4 flex items-center gap-2">
+              <Search className="w-6 h-6" />
+              Passive Crawl Analysis
+            </h3>
+            <p className="text-sm text-muted-foreground mb-4">{result.passiveCrawl.summary}</p>
+            {result.passiveCrawl.discoveredPaths.length > 0 && (
+              <div className="space-y-2">
+                {result.passiveCrawl.discoveredPaths.map((path, idx) => (
+                  <div
+                    key={idx}
+                    className={`flex items-center justify-between p-3 rounded-lg border ${
+                      path.risk === 'high' ? 'bg-destructive/10 border-destructive/30' :
+                      path.risk === 'medium' ? 'bg-warning/10 border-warning/30' :
+                      'bg-muted/10 border-border'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <code className="text-sm font-mono bg-background/50 px-2 py-1 rounded">{path.path}</code>
+                      <Badge variant="outline" className="text-xs">{path.type}</Badge>
+                    </div>
+                    <Badge variant={
+                      path.risk === 'high' ? 'destructive' :
+                      path.risk === 'medium' ? 'secondary' : 'default'
+                    }>
+                      {path.risk.toUpperCase()}
+                    </Badge>
+                  </div>
+                ))}
+              </div>
+            )}
           </Card>
 
           {/* SEO Analysis */}

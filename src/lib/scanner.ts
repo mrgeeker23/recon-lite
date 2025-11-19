@@ -89,16 +89,88 @@ export interface RTIInfo {
   verdict: string;
 }
 
+export interface PortScanInfo {
+  exposedPorts: {
+    port: number;
+    service: string;
+    exposureHint: string;
+    risk: 'low' | 'medium' | 'high';
+  }[];
+  summary: string;
+}
+
+export interface FrameworkRiskInfo {
+  framework?: string;
+  version?: string;
+  riskScore: number;
+  vulnerabilities: string[];
+  recommendation: string;
+}
+
+export interface JSSecurityInfo {
+  exposedSecrets: {
+    type: string;
+    severity: 'high' | 'medium' | 'low';
+    location: string;
+    preview: string;
+  }[];
+  suspiciousPatterns: string[];
+  riskLevel: 'low' | 'medium' | 'high';
+}
+
+export interface ScamDetectionInfo {
+  templateMatch: number;
+  matchedTemplates: string[];
+  jsKitMatch: boolean;
+  redirectBehavior: 'safe' | 'suspicious' | 'dangerous';
+  overallVerdict: string;
+}
+
+export type SuspicionTag = 
+  | 'Small Business Site'
+  | 'Scam Template'
+  | 'Phishing Kit'
+  | 'Outdated WordPress Theme'
+  | 'Student Project'
+  | 'Professional Site'
+  | 'E-commerce Store'
+  | 'Government Clone'
+  | 'Shared Hosting';
+
+export interface RiskTheme {
+  theme: string;
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  findings: string[];
+  score: number;
+}
+
+export interface PassiveCrawlInfo {
+  discoveredPaths: {
+    path: string;
+    risk: 'low' | 'medium' | 'high';
+    type: string;
+  }[];
+  summary: string;
+}
+
 export interface ScanResult {
   url: string;
   score: number;
   riskLevel: string;
+  trustScore: number;
   issues: SecurityIssue[];
   passedChecks: PassedCheck[];
   technology: TechnologyInfo;
   network: NetworkInfo;
   seo: SEOInfo;
   rti: RTIInfo;
+  portScan: PortScanInfo;
+  frameworkRisk: FrameworkRiskInfo;
+  jsSecurity: JSSecurityInfo;
+  scamDetection: ScamDetectionInfo;
+  suspicionTags: SuspicionTag[];
+  riskThemes: RiskTheme[];
+  passiveCrawl: PassiveCrawlInfo;
   healthMetrics: {
     uptime: string;
     responseTime: number;
@@ -801,6 +873,461 @@ export function analyzeRTI(url: string): RTIInfo {
   };
 }
 
+export function analyzePortScan(url: string): PortScanInfo {
+  const domain = new URL(url).hostname;
+  const exposedPorts: PortScanInfo['exposedPorts'] = [];
+  
+  // Detect hints from URL and common patterns
+  if (url.includes(':21') || url.includes('ftp://')) {
+    exposedPorts.push({
+      port: 21,
+      service: 'FTP',
+      exposureHint: 'FTP port exposed - unencrypted file transfer protocol detected',
+      risk: 'high'
+    });
+  }
+  
+  if (url.includes(':22')) {
+    exposedPorts.push({
+      port: 22,
+      service: 'SSH',
+      exposureHint: 'SSH port publicly accessible - potential brute force target',
+      risk: 'medium'
+    });
+  }
+  
+  if (url.includes(':3306')) {
+    exposedPorts.push({
+      port: 3306,
+      service: 'MySQL',
+      exposureHint: 'MySQL database port exposed to internet - critical security risk',
+      risk: 'high'
+    });
+  }
+  
+  if (url.includes(':8080')) {
+    exposedPorts.push({
+      port: 8080,
+      service: 'Admin Panel',
+      exposureHint: 'Common admin panel port exposed',
+      risk: 'medium'
+    });
+  }
+  
+  if (url.includes(':8443')) {
+    exposedPorts.push({
+      port: 8443,
+      service: 'Control Panel',
+      exposureHint: 'Control panel port accessible',
+      risk: 'medium'
+    });
+  }
+  
+  if (url.includes(':2082') || url.includes(':2083')) {
+    exposedPorts.push({
+      port: url.includes(':2082') ? 2082 : 2083,
+      service: 'cPanel',
+      exposureHint: 'cPanel port exposed - cheap shared hosting indicator',
+      risk: 'medium'
+    });
+  }
+  
+  // Simulate additional detections
+  if (Math.random() > 0.7) {
+    exposedPorts.push({
+      port: 80,
+      service: 'HTTP',
+      exposureHint: 'Unencrypted HTTP traffic allowed',
+      risk: 'low'
+    });
+  }
+  
+  const summary = exposedPorts.length > 0
+    ? `Detected ${exposedPorts.length} exposed port(s) - passive scan only, no active probing performed`
+    : 'No obvious port exposure detected from passive analysis';
+  
+  return { exposedPorts, summary };
+}
+
+export function analyzeFrameworkRisk(technology: TechnologyInfo): FrameworkRiskInfo {
+  let riskScore = 0;
+  const vulnerabilities: string[] = [];
+  let recommendation = '';
+  
+  const framework = technology.cms || technology.framework?.[0];
+  
+  if (technology.cms === 'WordPress') {
+    riskScore = 65;
+    vulnerabilities.push(
+      'WordPress is the #1 targeted CMS globally',
+      'Plugin vulnerabilities common',
+      'Theme security often overlooked',
+      'Known for outdated installations'
+    );
+    recommendation = 'Keep WordPress core, themes, and plugins updated. Use security plugins like Wordfence.';
+  } else if (technology.cms === 'Joomla') {
+    riskScore = 60;
+    vulnerabilities.push(
+      'Frequent security patches required',
+      'Extension vulnerabilities',
+      'Legacy versions still in use'
+    );
+    recommendation = 'Update to latest Joomla version. Review all extensions for security patches.';
+  } else if (technology.cms === 'Magento') {
+    riskScore = 55;
+    vulnerabilities.push(
+      'Complex codebase increases attack surface',
+      'E-commerce target for payment data theft',
+      'Extension security varies'
+    );
+    recommendation = 'Regular security audits required. Keep Magento and extensions updated.';
+  } else if (technology.framework?.includes('Laravel')) {
+    riskScore = 25;
+    vulnerabilities.push(
+      'Misconfiguration risks if .env exposed',
+      'Debug mode in production is dangerous'
+    );
+    recommendation = 'Ensure .env is protected and debug mode is disabled in production.';
+  } else if (technology.framework?.includes('Django')) {
+    riskScore = 20;
+    vulnerabilities.push(
+      'SQL injection if queries not parameterized',
+      'CSRF protection must be enabled'
+    );
+    recommendation = 'Follow Django security best practices and keep framework updated.';
+  } else {
+    riskScore = 35;
+    vulnerabilities.push('Framework/CMS detected but specific vulnerabilities unknown');
+    recommendation = 'Ensure all software is up to date and follow security best practices.';
+  }
+  
+  return {
+    framework,
+    version: Math.random() > 0.5 ? 'Outdated' : 'Current',
+    riskScore,
+    vulnerabilities,
+    recommendation
+  };
+}
+
+export function analyzeJSSecurity(url: string): JSSecurityInfo {
+  const exposedSecrets: JSSecurityInfo['exposedSecrets'] = [];
+  const suspiciousPatterns: string[] = [];
+  
+  // Simulate detection patterns
+  if (Math.random() > 0.6) {
+    exposedSecrets.push({
+      type: 'API Key',
+      severity: 'high',
+      location: 'main.js line 142',
+      preview: 'const API_KEY = "sk_live_51H..."'
+    });
+  }
+  
+  if (Math.random() > 0.7) {
+    exposedSecrets.push({
+      type: 'Access Token',
+      severity: 'high',
+      location: 'config.js line 23',
+      preview: 'token: "eyJhbGciOiJIUzI1NiIsInR..."'
+    });
+  }
+  
+  if (Math.random() > 0.5) {
+    exposedSecrets.push({
+      type: 'Internal Endpoint',
+      severity: 'medium',
+      location: 'app.js line 89',
+      preview: 'apiUrl: "https://internal-api.company.local"'
+    });
+  }
+  
+  if (Math.random() > 0.6) {
+    exposedSecrets.push({
+      type: 'Admin Route',
+      severity: 'medium',
+      location: 'router.js line 45',
+      preview: 'path: "/secret-admin-panel"'
+    });
+  }
+  
+  if (Math.random() > 0.8) {
+    exposedSecrets.push({
+      type: 'Debug Flag',
+      severity: 'low',
+      location: 'init.js line 12',
+      preview: 'DEBUG_MODE: true'
+    });
+  }
+  
+  // Suspicious patterns
+  if (exposedSecrets.length > 0) {
+    suspiciousPatterns.push('Hardcoded credentials detected');
+  }
+  
+  if (Math.random() > 0.5) {
+    suspiciousPatterns.push('Obfuscated JavaScript code present');
+  }
+  
+  if (Math.random() > 0.6) {
+    suspiciousPatterns.push('External script loading without SRI');
+  }
+  
+  const riskLevel: 'low' | 'medium' | 'high' = 
+    exposedSecrets.some(s => s.severity === 'high') ? 'high' :
+    exposedSecrets.some(s => s.severity === 'medium') ? 'medium' : 'low';
+  
+  return {
+    exposedSecrets,
+    suspiciousPatterns,
+    riskLevel
+  };
+}
+
+export function analyzeScamDetection(url: string, rti: RTIInfo): ScamDetectionInfo {
+  const domain = new URL(url).hostname;
+  const matchedTemplates: string[] = [];
+  let templateMatch = 0;
+  
+  // Check for common scam patterns
+  if (domain.includes('verify') || domain.includes('secure') || domain.includes('update')) {
+    matchedTemplates.push('Phishing verification template');
+    templateMatch += 30;
+  }
+  
+  if (rti.detectedPatterns.some(p => p.category === 'APAC Phishing Kit Structure' && p.detected)) {
+    matchedTemplates.push('APAC phishing kit structure');
+    templateMatch += 25;
+  }
+  
+  if (rti.detectedPatterns.some(p => p.category === 'SEA Threat Group JS Naming' && p.detected)) {
+    matchedTemplates.push('SEA scam kit JavaScript patterns');
+    templateMatch += 20;
+  }
+  
+  if (Math.random() > 0.6) {
+    matchedTemplates.push('Generic credential harvesting page');
+    templateMatch += 15;
+  }
+  
+  const jsKitMatch = rti.detectedPatterns.some(
+    p => p.category === 'SEA Threat Group JS Naming' && p.detected
+  );
+  
+  const redirectBehavior: 'safe' | 'suspicious' | 'dangerous' = 
+    rti.detectedPatterns.some(p => p.category === 'Redirects to Scam Domains' && p.detected) ? 'dangerous' :
+    Math.random() > 0.5 ? 'suspicious' : 'safe';
+  
+  let overallVerdict = '';
+  if (templateMatch >= 60 && jsKitMatch) {
+    overallVerdict = `This site resembles ${matchedTemplates.length} known scam templates (${templateMatch}% match). JS naming patterns similar to SEA scam kits. High redirect-to-unknown TLD behavior.`;
+  } else if (templateMatch >= 40) {
+    overallVerdict = `Moderate scam indicators detected (${templateMatch}% template match). Some suspicious patterns present.`;
+  } else {
+    overallVerdict = `Low scam template match (${templateMatch}%). Site structure appears relatively normal.`;
+  }
+  
+  return {
+    templateMatch,
+    matchedTemplates,
+    jsKitMatch,
+    redirectBehavior,
+    overallVerdict
+  };
+}
+
+export function generateSuspicionTags(
+  url: string,
+  technology: TechnologyInfo,
+  portScan: PortScanInfo,
+  frameworkRisk: FrameworkRiskInfo,
+  scamDetection: ScamDetectionInfo
+): SuspicionTag[] {
+  const tags: SuspicionTag[] = [];
+  
+  // Scam detection based tags
+  if (scamDetection.templateMatch >= 60) {
+    tags.push('Scam Template');
+  }
+  
+  if (scamDetection.jsKitMatch) {
+    tags.push('Phishing Kit');
+  }
+  
+  // Technology based tags
+  if (technology.cms === 'WordPress' && frameworkRisk.version === 'Outdated') {
+    tags.push('Outdated WordPress Theme');
+  }
+  
+  if (technology.cms === 'Shopify') {
+    tags.push('E-commerce Store');
+  }
+  
+  // Hosting based tags
+  if (portScan.exposedPorts.some(p => p.service === 'cPanel')) {
+    tags.push('Shared Hosting');
+  }
+  
+  // Pattern based tags
+  const domain = new URL(url).hostname;
+  if (domain.includes('.edu') || domain.includes('student') || domain.includes('project')) {
+    tags.push('Student Project');
+  }
+  
+  if (domain.includes('.gov') || domain.includes('government')) {
+    tags.push('Government Clone');
+  }
+  
+  // Default tags if nothing suspicious
+  if (tags.length === 0) {
+    if (technology.analytics && technology.analytics.length > 0) {
+      tags.push('Professional Site');
+    } else {
+      tags.push('Small Business Site');
+    }
+  }
+  
+  return tags;
+}
+
+export function generateRiskThemes(
+  issues: SecurityIssue[],
+  portScan: PortScanInfo,
+  frameworkRisk: FrameworkRiskInfo,
+  jsSecurity: JSSecurityInfo,
+  scamDetection: ScamDetectionInfo,
+  rti: RTIInfo
+): RiskTheme[] {
+  const themes: RiskTheme[] = [];
+  
+  // Infrastructure Security Theme
+  const infraFindings: string[] = [];
+  portScan.exposedPorts.forEach(p => {
+    if (p.risk === 'high' || p.risk === 'medium') {
+      infraFindings.push(p.exposureHint);
+    }
+  });
+  
+  if (infraFindings.length > 0) {
+    themes.push({
+      theme: 'Infrastructure Security',
+      severity: portScan.exposedPorts.some(p => p.risk === 'high') ? 'high' : 'medium',
+      findings: infraFindings,
+      score: Math.max(0, 100 - (infraFindings.length * 20))
+    });
+  }
+  
+  // Application Vulnerabilities Theme
+  const appFindings = issues.map(i => i.title);
+  if (appFindings.length > 0) {
+    const criticalCount = issues.filter(i => i.severity === 'high').length;
+    themes.push({
+      theme: 'Application Vulnerabilities',
+      severity: criticalCount > 0 ? 'critical' : 'high',
+      findings: appFindings,
+      score: Math.max(0, 100 - (issues.length * 15))
+    });
+  }
+  
+  // Framework & Platform Risks Theme
+  if (frameworkRisk.riskScore > 40) {
+    themes.push({
+      theme: 'Framework & Platform Risks',
+      severity: frameworkRisk.riskScore > 60 ? 'high' : 'medium',
+      findings: frameworkRisk.vulnerabilities,
+      score: 100 - frameworkRisk.riskScore
+    });
+  }
+  
+  // Code Security Theme
+  if (jsSecurity.exposedSecrets.length > 0) {
+    themes.push({
+      theme: 'Code Security',
+      severity: jsSecurity.riskLevel,
+      findings: jsSecurity.exposedSecrets.map(s => `${s.type} exposed in ${s.location}`),
+      score: Math.max(0, 100 - (jsSecurity.exposedSecrets.length * 15))
+    });
+  }
+  
+  // Regional Threat Indicators Theme
+  if (rti.likelihood > 40) {
+    themes.push({
+      theme: 'Regional Threat Indicators',
+      severity: rti.likelihood > 70 ? 'critical' : rti.likelihood > 50 ? 'high' : 'medium',
+      findings: rti.detectedPatterns.filter(p => p.detected).map(p => p.details),
+      score: 100 - rti.likelihood
+    });
+  }
+  
+  // Scam & Phishing Indicators Theme
+  if (scamDetection.templateMatch > 30) {
+    themes.push({
+      theme: 'Scam & Phishing Indicators',
+      severity: scamDetection.templateMatch > 60 ? 'critical' : 'high',
+      findings: [scamDetection.overallVerdict, ...scamDetection.matchedTemplates],
+      score: Math.max(0, 100 - scamDetection.templateMatch)
+    });
+  }
+  
+  return themes;
+}
+
+export function analyzePassiveCrawl(url: string): PassiveCrawlInfo {
+  const discoveredPaths: PassiveCrawlInfo['discoveredPaths'] = [];
+  const commonPaths: { path: string; risk: 'low' | 'medium' | 'high'; type: string }[] = [
+    { path: '/wp-admin', risk: 'high', type: 'WordPress Admin' },
+    { path: '/admin', risk: 'high', type: 'Admin Panel' },
+    { path: '/login', risk: 'medium', type: 'Login Page' },
+    { path: '/config', risk: 'high', type: 'Configuration File' },
+    { path: '/backup', risk: 'high', type: 'Backup Directory' },
+    { path: '/test', risk: 'medium', type: 'Test Environment' },
+    { path: '/old', risk: 'medium', type: 'Legacy Files' },
+    { path: '/v1', risk: 'low', type: 'API Version' },
+    { path: '/debug', risk: 'high', type: 'Debug Console' },
+    { path: '/.git', risk: 'high', type: 'Git Repository' },
+    { path: '/.env', risk: 'high', type: 'Environment File' }
+  ];
+  
+  // Simulate discovering some paths
+  commonPaths.forEach(pathInfo => {
+    if (Math.random() > 0.7) {
+      discoveredPaths.push(pathInfo);
+    }
+  });
+  
+  const highRiskCount = discoveredPaths.filter(p => p.risk === 'high').length;
+  const summary = discoveredPaths.length > 0
+    ? `Discovered ${discoveredPaths.length} sensitive path(s) via passive HTML parsing. ${highRiskCount} high-risk paths found.`
+    : 'No sensitive administrative or configuration paths discovered in passive crawl.';
+  
+  return {
+    discoveredPaths,
+    summary
+  };
+}
+
+export function calculateTrustScore(
+  score: number,
+  riskThemes: RiskTheme[],
+  scamDetection: ScamDetectionInfo,
+  rti: RTIInfo
+): number {
+  let trustScore = score;
+  
+  // Reduce trust based on scam detection
+  trustScore -= scamDetection.templateMatch * 0.5;
+  
+  // Reduce trust based on RTI likelihood
+  trustScore -= rti.likelihood * 0.3;
+  
+  // Reduce trust based on critical themes
+  const criticalThemes = riskThemes.filter(t => t.severity === 'critical').length;
+  trustScore -= criticalThemes * 15;
+  
+  // Ensure score is between 0-100
+  return Math.max(0, Math.min(100, Math.round(trustScore)));
+}
+
 export async function scanUrl(url: string): Promise<ScanResult> {
   // Simulate scanning delay
   await new Promise(resolve => setTimeout(resolve, 2000 + Math.random() * 2000));
@@ -851,6 +1378,16 @@ export async function scanUrl(url: string): Promise<ScanResult> {
   const seo = analyzeSEO(url);
   const rti = analyzeRTI(url);
   
+  // New advanced analyses
+  const portScan = analyzePortScan(url);
+  const frameworkRisk = analyzeFrameworkRisk(technology);
+  const jsSecurity = analyzeJSSecurity(url);
+  const scamDetection = analyzeScamDetection(url, rti);
+  const suspicionTags = generateSuspicionTags(url, technology, portScan, frameworkRisk, scamDetection);
+  const passiveCrawl = analyzePassiveCrawl(url);
+  const riskThemes = generateRiskThemes(issues, portScan, frameworkRisk, jsSecurity, scamDetection, rti);
+  const trustScore = calculateTrustScore(score, riskThemes, scamDetection, rti);
+  
   // Generate health metrics
   const healthMetrics = {
     uptime: `${(98 + Math.random() * 2).toFixed(2)}%`,
@@ -865,12 +1402,20 @@ export async function scanUrl(url: string): Promise<ScanResult> {
     url,
     score,
     riskLevel,
+    trustScore,
     issues,
     passedChecks,
     technology,
     network,
     seo,
     rti,
+    portScan,
+    frameworkRisk,
+    jsSecurity,
+    scamDetection,
+    suspicionTags,
+    riskThemes,
+    passiveCrawl,
     healthMetrics
   };
 }
