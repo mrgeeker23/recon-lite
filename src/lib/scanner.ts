@@ -1,3 +1,7 @@
+import { performActiveScan } from './activeScanner';
+import { getMitreTechnique, MitreTechnique } from './mitreMapping';
+import { performCVEAnalysis, CVEMatch, TechnologyVersion } from './cveMatching';
+
 export type Severity = 'high' | 'medium' | 'low';
 
 export interface SecurityIssue {
@@ -9,6 +13,7 @@ export interface SecurityIssue {
   technicalDetails: string;
   fix: string;
   references: string[];
+  mitreTechnique?: MitreTechnique;
 }
 
 export interface SEOInfo {
@@ -81,6 +86,10 @@ export interface NetworkInfo {
   };
   activeScanPerformed?: boolean;
   activeScanError?: string;
+  cveAnalysis?: {
+    versions: TechnologyVersion[];
+    cves: CVEMatch[];
+  };
 }
 
 export interface TechnologyInfo {
@@ -1479,6 +1488,37 @@ export async function scanUrl(url: string): Promise<ScanResult> {
         activeScanPerformed: true
       };
       
+      // Perform CVE analysis
+      try {
+        const cveAnalysis = await performCVEAnalysis(activeScanResult.headers.allHeaders);
+        network.cveAnalysis = cveAnalysis;
+        
+        // Add issues for detected CVEs
+        if (cveAnalysis.cves.length > 0) {
+          cveAnalysis.cves.forEach(cve => {
+            issues.push({
+              id: 'cve-detected',
+              severity: cve.severity === 'critical' || cve.severity === 'high' ? 'high' : 
+                       cve.severity === 'medium' ? 'medium' : 'low',
+              title: `${cve.cveId}: Vulnerable ${cve.technology}`,
+              description: cve.description,
+              impact: `CVSS Score: ${cve.cvssScore}/10. This vulnerability could be exploited by attackers.`,
+              technicalDetails: `Detected ${cve.technology} with known vulnerability ${cve.cveId}. Published: ${cve.publishedDate}`,
+              fix: `Update ${cve.technology} to the latest patched version.`,
+              references: [cve.url],
+              mitreTechnique: getMitreTechnique('deprecated-js-libraries')
+            });
+          });
+          
+          // Adjust score based on CVEs
+          const criticalCVEs = cveAnalysis.cves.filter(c => c.severity === 'critical').length;
+          const highCVEs = cveAnalysis.cves.filter(c => c.severity === 'high').length;
+          score = Math.max(0, score - (criticalCVEs * 15) - (highCVEs * 10));
+        }
+      } catch (cveError) {
+        console.error('CVE analysis error:', cveError);
+      }
+      
       // Adjust score based on header security
       const headerScore = activeScanResult.headers.score;
       if (headerScore < 50) {
@@ -1521,7 +1561,8 @@ export async function scanUrl(url: string): Promise<ScanResult> {
           references: [
             'https://owasp.org/www-project-secure-headers/',
             'https://securityheaders.com/'
-          ]
+          ],
+          mitreTechnique: getMitreTechnique('missing-security-headers')
         });
       }
     } else {

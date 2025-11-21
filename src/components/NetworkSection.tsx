@@ -2,7 +2,7 @@ import { NetworkInfo } from '@/lib/scanner';
 import { Card } from './ui/card';
 import { Badge } from './ui/badge';
 import { Separator } from './ui/separator';
-import { Network, Server, Globe, Radio, Link2, MapPin, Shield, ExternalLink, AlertCircle, CheckCircle, XCircle } from 'lucide-react';
+import { Network, Server, Globe, Radio, Link2, MapPin, Shield, ExternalLink, AlertCircle, CheckCircle, XCircle, Bug, FileText, AlertTriangle } from 'lucide-react';
 
 interface NetworkSectionProps {
   network: NetworkInfo;
@@ -196,6 +196,51 @@ export function NetworkSection({ network }: NetworkSectionProps) {
                   </div>
                 ))}
               </div>
+            </div>
+          </>
+        )}
+        
+        {/* CVE Analysis */}
+        {network.cveAnalysis && (network.cveAnalysis.versions.length > 0 || network.cveAnalysis.cves.length > 0) && (
+          <>
+            <Separator />
+            <div className="space-y-3">
+              <h4 className="text-lg font-semibold flex items-center gap-2">
+                <Bug className="w-5 h-5" />
+                CVE Version Matching
+              </h4>
+              
+              {network.cveAnalysis.versions.length > 0 && (
+                <div className="pl-7 space-y-2">
+                  <p className="text-sm font-semibold">Detected Versions:</p>
+                  {network.cveAnalysis.versions.map((v, idx) => (
+                    <div key={idx} className="p-2 bg-muted/50 rounded text-xs">
+                      <span className="font-semibold">{v.name} {v.version}</span> - {v.detectedFrom}
+                    </div>
+                  ))}
+                </div>
+              )}
+              
+              {network.cveAnalysis.cves.length > 0 && (
+                <div className="pl-7 space-y-2">
+                  <p className="text-sm font-semibold text-destructive flex items-center gap-2">
+                    <AlertTriangle className="w-4 h-4" />
+                    Known CVEs: {network.cveAnalysis.cves.length}
+                  </p>
+                  {network.cveAnalysis.cves.map((cve, idx) => (
+                    <div key={idx} className="p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
+                      <div className="flex items-center gap-2 mb-1">
+                        <a href={cve.url} target="_blank" rel="noopener noreferrer" className="font-bold text-sm hover:underline">
+                          {cve.cveId}
+                        </a>
+                        <Badge variant="destructive" className="text-xs">{cve.severity}</Badge>
+                      </div>
+                      <p className="text-xs mb-1">{cve.description}</p>
+                      <p className="text-xs text-muted-foreground">CVSS: {cve.cvssScore}/10 | {cve.publishedDate}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </>
         )}

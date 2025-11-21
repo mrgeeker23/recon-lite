@@ -1,4 +1,5 @@
 import { ScanResult, PassedCheck, getSeverityIcon, getSeverityColor } from '@/lib/scanner';
+import { generatePDFReport } from '@/lib/pdfGenerator';
 import { Card } from './ui/card';
 import { Badge } from './ui/badge';
 import { Separator } from './ui/separator';
@@ -23,7 +24,9 @@ import {
   Eye,
   Lock,
   Unlock,
-  AlertTriangle
+  AlertTriangle,
+  Download,
+  FileText
 } from 'lucide-react';
 import { NetworkSection } from './NetworkSection';
 import { Button } from './ui/button';
@@ -42,22 +45,33 @@ export function ScanResults({ results }: ScanResultsProps) {
           {/* Header Card */}
           <Card className="p-6">
             <div className="space-y-4">
-              <div>
-                <h2 className="text-3xl font-bold mb-2">
-                  {result.url}
-                </h2>
-                <div className="flex flex-wrap gap-4 items-center">
-                  <div className="flex items-center gap-2">
-                    <Shield className="w-5 h-5" />
-                    <span className="text-lg">Security Score: <span className="font-bold text-2xl">{result.score}/100</span></span>
+              <div className="flex justify-between items-start">
+                <div>
+                  <h2 className="text-3xl font-bold mb-2">
+                    {result.url}
+                  </h2>
+                  <div className="flex flex-wrap gap-4 items-center">
+                    <div className="flex items-center gap-2">
+                      <Shield className="w-5 h-5" />
+                      <span className="text-lg">Security Score: <span className="font-bold text-2xl">{result.score}/100</span></span>
+                    </div>
+                    <Badge 
+                      variant={result.score >= 75 ? 'default' : result.score >= 50 ? 'secondary' : 'destructive'}
+                      className="text-base px-4 py-1"
+                    >
+                      {result.riskLevel}
+                    </Badge>
                   </div>
-                  <Badge 
-                    variant={result.score >= 75 ? 'default' : result.score >= 50 ? 'secondary' : 'destructive'}
-                    className="text-base px-4 py-1"
-                  >
-                    {result.riskLevel}
-                  </Badge>
                 </div>
+                <Button
+                  onClick={() => generatePDFReport(result)}
+                  variant="outline"
+                  size="lg"
+                  className="flex items-center gap-2"
+                >
+                  <Download className="w-5 h-5" />
+                  Export PDF Report
+                </Button>
               </div>
               
               {result.issues.length > 0 && (
