@@ -98,30 +98,155 @@ const SECURITY_HEADERS = [
 ];
 
 const COMMON_ENDPOINTS = [
+  // API Endpoints
   { path: '/api', type: 'API Endpoint' },
   { path: '/api/v1', type: 'API Endpoint' },
   { path: '/api/v2', type: 'API Endpoint' },
+  { path: '/api/v3', type: 'API Endpoint' },
   { path: '/graphql', type: 'GraphQL Endpoint' },
   { path: '/rest', type: 'REST API' },
+  { path: '/v1', type: 'API Version 1' },
+  { path: '/v2', type: 'API Version 2' },
+  
+  // Standard Files
   { path: '/robots.txt', type: 'Robots File' },
   { path: '/sitemap.xml', type: 'Sitemap' },
+  { path: '/sitemap_index.xml', type: 'Sitemap Index' },
   { path: '/.well-known/security.txt', type: 'Security Info' },
   { path: '/.well-known/openid-configuration', type: 'OpenID Config' },
+  { path: '/.well-known/change-password', type: 'Password Change' },
+  
+  // Admin Panels & Dashboards
   { path: '/admin', type: 'Admin Panel' },
+  { path: '/administrator', type: 'Administrator Panel' },
+  { path: '/admin.php', type: 'Admin PHP' },
   { path: '/wp-admin', type: 'WordPress Admin' },
+  { path: '/wp-login.php', type: 'WordPress Login' },
+  { path: '/phpmyadmin', type: 'phpMyAdmin' },
+  { path: '/cpanel', type: 'cPanel' },
+  { path: '/plesk', type: 'Plesk Panel' },
+  { path: '/manager', type: 'Manager Panel' },
+  { path: '/controlpanel', type: 'Control Panel' },
+  
+  // Authentication Pages
   { path: '/login', type: 'Login Page' },
   { path: '/signin', type: 'Sign In Page' },
+  { path: '/signup', type: 'Sign Up Page' },
+  { path: '/register', type: 'Registration Page' },
+  { path: '/auth', type: 'Auth Endpoint' },
+  { path: '/authentication', type: 'Authentication' },
+  { path: '/oauth', type: 'OAuth Endpoint' },
+  
+  // Application Pages
   { path: '/dashboard', type: 'Dashboard' },
+  { path: '/console', type: 'Console' },
+  { path: '/portal', type: 'Portal' },
+  { path: '/app', type: 'Application' },
+  
+  // Configuration Files (High Risk)
   { path: '/config.json', type: 'Config File' },
+  { path: '/config.php', type: 'PHP Config' },
+  { path: '/configuration.php', type: 'Configuration' },
+  { path: '/settings.json', type: 'Settings File' },
+  { path: '/app.json', type: 'App Config' },
+  { path: '/web.config', type: 'Web Config' },
+  { path: '/.htaccess', type: 'Apache Config' },
+  { path: '/composer.json', type: 'Composer Config' },
   { path: '/package.json', type: 'Package Info' },
+  { path: '/package-lock.json', type: 'Package Lock' },
+  { path: '/yarn.lock', type: 'Yarn Lock' },
+  
+  // Environment Files (Critical Risk)
   { path: '/.env', type: 'Environment File' },
+  { path: '/.env.local', type: 'Local Env File' },
+  { path: '/.env.production', type: 'Production Env' },
+  { path: '/.env.development', type: 'Dev Env File' },
+  { path: '/.env.example', type: 'Example Env' },
+  { path: '/.env.backup', type: 'Backup Env' },
+  
+  // Version Control (Critical Risk)
+  { path: '/.git', type: 'Git Repository' },
   { path: '/.git/config', type: 'Git Config' },
-  { path: '/swagger', type: 'API Docs' },
+  { path: '/.git/HEAD', type: 'Git HEAD' },
+  { path: '/.gitignore', type: 'Git Ignore' },
+  { path: '/.svn', type: 'SVN Repository' },
+  { path: '/.svn/entries', type: 'SVN Entries' },
+  { path: '/.hg', type: 'Mercurial Repo' },
+  
+  // Backup Files (High Risk)
+  { path: '/backup', type: 'Backup Directory' },
+  { path: '/backup.zip', type: 'Backup Archive' },
+  { path: '/backup.tar.gz', type: 'Backup Tarball' },
+  { path: '/backup.sql', type: 'SQL Backup' },
+  { path: '/database.sql', type: 'Database Dump' },
+  { path: '/db.sql', type: 'DB Dump' },
+  { path: '/dump.sql', type: 'SQL Dump' },
+  { path: '/site-backup.zip', type: 'Site Backup' },
+  { path: '/www.zip', type: 'WWW Archive' },
+  { path: '/web.zip', type: 'Web Archive' },
+  
+  // Log Files (Medium Risk)
+  { path: '/logs', type: 'Log Directory' },
+  { path: '/log', type: 'Log Folder' },
+  { path: '/error.log', type: 'Error Log' },
+  { path: '/access.log', type: 'Access Log' },
+  { path: '/debug.log', type: 'Debug Log' },
+  { path: '/application.log', type: 'App Log' },
+  
+  // Documentation & API Docs
+  { path: '/swagger', type: 'Swagger API Docs' },
+  { path: '/swagger-ui', type: 'Swagger UI' },
+  { path: '/swagger.json', type: 'Swagger JSON' },
+  { path: '/api-docs', type: 'API Documentation' },
   { path: '/docs', type: 'Documentation' },
+  { path: '/documentation', type: 'Docs Page' },
+  { path: '/api/docs', type: 'API Docs' },
+  { path: '/redoc', type: 'ReDoc API' },
+  
+  // Monitoring & Status
   { path: '/health', type: 'Health Check' },
+  { path: '/healthz', type: 'Health Check' },
   { path: '/status', type: 'Status Page' },
   { path: '/metrics', type: 'Metrics Endpoint' },
+  { path: '/ping', type: 'Ping Endpoint' },
+  { path: '/ready', type: 'Readiness Check' },
+  { path: '/live', type: 'Liveness Check' },
+  
+  // Debug & Test Endpoints
   { path: '/debug', type: 'Debug Endpoint' },
+  { path: '/test', type: 'Test Page' },
+  { path: '/phpinfo.php', type: 'PHP Info' },
+  { path: '/info.php', type: 'Info Page' },
+  { path: '/server-status', type: 'Server Status' },
+  { path: '/server-info', type: 'Server Info' },
+  
+  // Upload Directories
+  { path: '/uploads', type: 'Uploads Folder' },
+  { path: '/upload', type: 'Upload Directory' },
+  { path: '/files', type: 'Files Directory' },
+  { path: '/media', type: 'Media Folder' },
+  { path: '/assets', type: 'Assets Folder' },
+  { path: '/static', type: 'Static Files' },
+  { path: '/public', type: 'Public Directory' },
+  
+  // Common CMS Paths
+  { path: '/wp-content', type: 'WordPress Content' },
+  { path: '/wp-includes', type: 'WordPress Includes' },
+  { path: '/wp-json', type: 'WordPress REST API' },
+  { path: '/xmlrpc.php', type: 'XML-RPC' },
+  { path: '/readme.html', type: 'WordPress Readme' },
+  { path: '/license.txt', type: 'License File' },
+  
+  // Database Interfaces
+  { path: '/adminer', type: 'Adminer DB Tool' },
+  { path: '/adminer.php', type: 'Adminer' },
+  { path: '/db', type: 'Database Interface' },
+  { path: '/database', type: 'Database Panel' },
+  
+  // IDE & Editor Configs
+  { path: '/.vscode', type: 'VS Code Config' },
+  { path: '/.idea', type: 'IntelliJ Config' },
+  { path: '/.DS_Store', type: 'macOS System File' },
 ];
 
 // CORS proxy for testing (optional, can be removed if direct access works)
@@ -228,18 +353,46 @@ export async function discoverEndpoints(baseUrl: string): Promise<EndpointDiscov
         const responseTime = Math.round(endTime - startTime);
         const contentType = response.headers.get('content-type') || undefined;
         
-        // Determine risk level
+        // Determine risk level based on endpoint type and path
         let risk: 'low' | 'medium' | 'high' = 'low';
         let details = `${endpoint.type} found`;
         
-        if (endpoint.path.includes('.env') || endpoint.path.includes('.git')) {
+        // Critical Risk - Exposed sensitive files
+        if (endpoint.path.includes('.env') || 
+            endpoint.path.includes('.git') || 
+            endpoint.path.includes('.svn') ||
+            endpoint.path.includes('backup.sql') ||
+            endpoint.path.includes('database.sql') ||
+            endpoint.path.includes('dump.sql')) {
           risk = 'high';
-          details = 'Sensitive file exposed! This should not be publicly accessible.';
-        } else if (endpoint.path.includes('admin') || endpoint.path.includes('config')) {
+          details = '🚨 CRITICAL: Sensitive file exposed! Immediate action required.';
+        }
+        // High Risk - Admin panels, configs, backups
+        else if (endpoint.path.includes('admin') || 
+                 endpoint.path.includes('phpmyadmin') ||
+                 endpoint.path.includes('cpanel') ||
+                 endpoint.path.includes('config.php') ||
+                 endpoint.path.includes('web.config') ||
+                 endpoint.path.includes('backup') ||
+                 endpoint.path.includes('.zip') ||
+                 endpoint.path.includes('phpinfo')) {
+          risk = 'high';
+          details = '⚠️ High risk: Sensitive endpoint publicly accessible';
+        }
+        // Medium Risk - Login pages, debug endpoints, logs
+        else if (endpoint.path.includes('login') ||
+                 endpoint.path.includes('signin') ||
+                 endpoint.path.includes('debug') ||
+                 endpoint.path.includes('test') ||
+                 endpoint.path.includes('log') ||
+                 endpoint.path.includes('swagger') ||
+                 endpoint.path.includes('metrics')) {
           risk = 'medium';
-          details = 'Potentially sensitive endpoint accessible';
-        } else if (response.status === 200) {
-          details = `${endpoint.type} accessible (${response.status})`;
+          details = '⚡ Medium risk: Consider restricting access';
+        }
+        // Low Risk - Public endpoints
+        else if (response.status === 200) {
+          details = `✓ ${endpoint.type} accessible (${response.status})`;
         }
         
         return {
