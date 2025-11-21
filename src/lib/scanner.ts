@@ -2,7 +2,7 @@ import { performActiveScan } from './activeScanner';
 import { getMitreTechnique, MitreTechnique } from './mitreMapping';
 import { performCVEAnalysis, CVEMatch, TechnologyVersion } from './cveMatching';
 
-export type Severity = 'high' | 'medium' | 'low';
+export type Severity = 'critical' | 'high' | 'medium' | 'low';
 
 export interface SecurityIssue {
   id: string;
@@ -79,7 +79,7 @@ export interface NetworkInfo {
       responseTime: number;
       contentType?: string;
       accessible: boolean;
-      risk: 'low' | 'medium' | 'high';
+      risk: 'critical' | 'high' | 'medium' | 'low';
       details: string;
     }[];
     summary: string;
@@ -1457,12 +1457,13 @@ export async function scanUrl(url: string): Promise<ScanResult> {
     }
   }
 
-  // Calculate score based on issues
+  // Calculate score based on issues with rebalanced penalties
   let score = 100;
   issues.forEach(issue => {
-    if (issue.severity === 'high') score -= 25;
-    else if (issue.severity === 'medium') score -= 15;
-    else score -= 5;
+    if (issue.severity === 'critical') score -= 30;
+    else if (issue.severity === 'high') score -= 15;
+    else if (issue.severity === 'medium') score -= 8;
+    else score -= 3;
   });
   score = Math.max(0, score);
 
@@ -1493,16 +1494,21 @@ export async function scanUrl(url: string): Promise<ScanResult> {
         const cveAnalysis = await performCVEAnalysis(activeScanResult.headers.allHeaders);
         network.cveAnalysis = cveAnalysis;
         
-        // Add issues for detected CVEs
+        // Add issues for detected CVEs with more granular severity
         if (cveAnalysis.cves.length > 0) {
           cveAnalysis.cves.forEach(cve => {
+            // Map CVE severity more accurately based on CVSS score
+            let severity: Severity = 'low';
+            if (cve.cvssScore >= 9.0) severity = 'critical';
+            else if (cve.cvssScore >= 7.0) severity = 'high';
+            else if (cve.cvssScore >= 4.0) severity = 'medium';
+            
             issues.push({
               id: 'cve-detected',
-              severity: cve.severity === 'critical' || cve.severity === 'high' ? 'high' : 
-                       cve.severity === 'medium' ? 'medium' : 'low',
+              severity,
               title: `${cve.cveId}: Vulnerable ${cve.technology}`,
               description: cve.description,
-              impact: `CVSS Score: ${cve.cvssScore}/10. This vulnerability could be exploited by attackers.`,
+              impact: `CVSS Score: ${cve.cvssScore}/10. ${cve.cvssScore >= 9.0 ? 'Critical vulnerability requiring immediate action.' : cve.cvssScore >= 7.0 ? 'High severity - should be patched soon.' : 'Medium to low risk - update when convenient.'}`,
               technicalDetails: `Detected ${cve.technology} with known vulnerability ${cve.cveId}. Published: ${cve.publishedDate}`,
               fix: `Update ${cve.technology} to the latest patched version.`,
               references: [cve.url],
@@ -1510,40 +1516,62 @@ export async function scanUrl(url: string): Promise<ScanResult> {
             });
           });
           
-          // Adjust score based on CVEs
-          const criticalCVEs = cveAnalysis.cves.filter(c => c.severity === 'critical').length;
-          const highCVEs = cveAnalysis.cves.filter(c => c.severity === 'high').length;
-          score = Math.max(0, score - (criticalCVEs * 15) - (highCVEs * 10));
+          // Adjust score based on CVEs with rebalanced penalties
+          const criticalCVEs = cveAnalysis.cves.filter(c => c.cvssScore >= 9.0).length;
+          const highCVEs = cveAnalysis.cves.filter(c => c.cvssScore >= 7.0 && c.cvssScore < 9.0).length;
+          const mediumCVEs = cveAnalysis.cves.filter(c => c.cvssScore >= 4.0 && c.cvssScore < 7.0).length;
+          score = Math.max(0, score - (criticalCVEs * 12) - (highCVEs * 6) - (mediumCVEs * 3));
         }
       } catch (cveError) {
         console.error('CVE analysis error:', cveError);
       }
       
-      // Adjust score based on header security
+      // Adjust score based on header security (reduced penalty)
       const headerScore = activeScanResult.headers.score;
-      if (headerScore < 50) {
-        score = Math.max(0, score - 15);
-      } else if (headerScore < 75) {
-        score = Math.max(0, score - 5);
+      if (headerScore < 40) {
+        score = Math.max(0, score - 8);
+      } else if (headerScore < 70) {
+        score = Math.max(0, score - 3);
       }
       
-      // Add issues for high-risk endpoints
+      // Add issues for high-risk endpoints (with better severity assessment)
+      const criticalEndpoints = activeScanResult.endpoints.endpoints.filter(e => e.risk === 'critical');
       const highRiskEndpoints = activeScanResult.endpoints.endpoints.filter(e => e.risk === 'high');
+      
+      if (criticalEndpoints.length > 0) {
+        issues.push({
+          id: 'exposed-critical-endpoints',
+          severity: 'critical',
+          title: 'Critical Endpoints Exposed',
+          description: `Found ${criticalEndpoints.length} critical endpoint(s) that must not be publicly accessible.`,
+          impact: 'Immediate security risk. Attackers could gain access to environment variables, source code, database credentials, or administrative interfaces.',
+          technicalDetails: `Exposed endpoints: ${criticalEndpoints.map(e => e.path).join(', ')}`,
+          fix: 'URGENT: Immediately restrict access to these endpoints. Move sensitive files outside the web root and implement proper authentication.',
+          references: [
+            'https://owasp.org/www-project-top-ten/2017/A5_2017-Broken_Access_Control',
+            'https://cwe.mitre.org/data/definitions/548.html'
+          ],
+          mitreTechnique: getMitreTechnique('exposed-admin-panel')
+        });
+        score = Math.max(0, score - 25);
+      }
+      
       if (highRiskEndpoints.length > 0) {
         issues.push({
           id: 'exposed-sensitive-endpoints',
           severity: 'high',
           title: 'Sensitive Endpoints Exposed',
           description: `Found ${highRiskEndpoints.length} sensitive endpoint(s) that should not be publicly accessible.`,
-          impact: 'Attackers could gain access to sensitive configuration files, administrative interfaces, or system files.',
+          impact: 'Attackers could gain access to configuration files, version control data, or internal documentation.',
           technicalDetails: `Exposed endpoints: ${highRiskEndpoints.map(e => e.path).join(', ')}`,
-          fix: 'Restrict access to sensitive endpoints using proper authentication and authorization. Move configuration files outside the web root.',
+          fix: 'Restrict access to sensitive endpoints using proper authentication and authorization. Remove unnecessary files from production.',
           references: [
             'https://owasp.org/www-project-top-ten/2017/A5_2017-Broken_Access_Control',
             'https://cwe.mitre.org/data/definitions/548.html'
-          ]
+          ],
+          mitreTechnique: getMitreTechnique('exposed-admin-panel')
         });
-        score = Math.max(0, score - 20);
+        score = Math.max(0, score - 12);
       }
       
       // Add issues for missing security headers
@@ -1625,6 +1653,8 @@ export async function scanUrl(url: string): Promise<ScanResult> {
 
 export function getSeverityColor(severity: Severity): string {
   switch (severity) {
+    case 'critical':
+      return 'text-destructive font-bold';
     case 'high':
       return 'text-destructive';
     case 'medium':
@@ -1636,6 +1666,8 @@ export function getSeverityColor(severity: Severity): string {
 
 export function getSeverityIcon(severity: Severity): string {
   switch (severity) {
+    case 'critical':
+      return '🚨';
     case 'high':
       return '🔴';
     case 'medium':

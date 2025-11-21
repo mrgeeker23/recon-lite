@@ -81,6 +81,10 @@ export function ScanResults({ results }: ScanResultsProps) {
                     <Badge variant="outline">{result.issues.length}</Badge>
                   </div>
                   <div className="flex items-center gap-2">
+                    <span className="text-2xl">🚨</span>
+                    <span>{result.issues.filter(i => i.severity === 'critical').length} Critical</span>
+                  </div>
+                  <div className="flex items-center gap-2">
                     <XCircle className="w-4 h-4 text-destructive" />
                     <span>{result.issues.filter(i => i.severity === 'high').length} High</span>
                   </div>
