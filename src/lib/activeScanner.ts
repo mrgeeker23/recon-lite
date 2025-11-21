@@ -20,7 +20,7 @@ export interface EndpointDiscovery {
     responseTime: number;
     contentType?: string;
     accessible: boolean;
-    risk: 'low' | 'medium' | 'high';
+    risk: 'critical' | 'high' | 'medium' | 'low';
     details: string;
   }[];
   summary: string;
@@ -354,43 +354,57 @@ export async function discoverEndpoints(baseUrl: string): Promise<EndpointDiscov
         const contentType = response.headers.get('content-type') || undefined;
         
         // Determine risk level based on endpoint type and path
-        let risk: 'low' | 'medium' | 'high' = 'low';
+        let risk: 'critical' | 'high' | 'medium' | 'low' = 'low';
         let details = `${endpoint.type} found`;
         
-        // Critical Risk - Exposed sensitive files
+        // CRITICAL Risk - Environment files and source code exposure
         if (endpoint.path.includes('.env') || 
-            endpoint.path.includes('.git') || 
-            endpoint.path.includes('.svn') ||
+            endpoint.path.includes('.git/') || 
+            endpoint.path.includes('.svn/') ||
             endpoint.path.includes('backup.sql') ||
             endpoint.path.includes('database.sql') ||
-            endpoint.path.includes('dump.sql')) {
-          risk = 'high';
-          details = '🚨 CRITICAL: Sensitive file exposed! Immediate action required.';
+            endpoint.path.includes('dump.sql') ||
+            endpoint.path.includes('db.sql')) {
+          risk = 'critical';
+          details = '🚨 CRITICAL: Sensitive credentials/source code exposed! Immediate action required.';
         }
-        // High Risk - Admin panels, configs, backups
-        else if (endpoint.path.includes('admin') || 
+        // HIGH Risk - Admin panels, configs, backups
+        else if (endpoint.path.includes('/admin') || 
                  endpoint.path.includes('phpmyadmin') ||
                  endpoint.path.includes('cpanel') ||
                  endpoint.path.includes('config.php') ||
                  endpoint.path.includes('web.config') ||
-                 endpoint.path.includes('backup') ||
+                 endpoint.path.includes('.htaccess') ||
+                 endpoint.path.includes('/backup') ||
                  endpoint.path.includes('.zip') ||
+                 endpoint.path.includes('.tar.gz') ||
                  endpoint.path.includes('phpinfo')) {
           risk = 'high';
           details = '⚠️ High risk: Sensitive endpoint publicly accessible';
         }
-        // Medium Risk - Login pages, debug endpoints, logs
+        // MEDIUM Risk - Login pages, debug endpoints, logs
         else if (endpoint.path.includes('login') ||
                  endpoint.path.includes('signin') ||
-                 endpoint.path.includes('debug') ||
-                 endpoint.path.includes('test') ||
-                 endpoint.path.includes('log') ||
+                 endpoint.path.includes('/debug') ||
+                 endpoint.path.includes('/test') ||
+                 endpoint.path.includes('error.log') ||
+                 endpoint.path.includes('access.log') ||
                  endpoint.path.includes('swagger') ||
                  endpoint.path.includes('metrics')) {
           risk = 'medium';
           details = '⚡ Medium risk: Consider restricting access';
         }
-        // Low Risk - Public endpoints
+        // LOW Risk - Public endpoints (robots.txt, sitemap, public docs, health checks)
+        else if (endpoint.path === '/robots.txt' ||
+                 endpoint.path === '/sitemap.xml' ||
+                 endpoint.path.includes('/health') ||
+                 endpoint.path.includes('/ping') ||
+                 endpoint.path.includes('/status') ||
+                 endpoint.path === '/.well-known/') {
+          risk = 'low';
+          details = `✓ ${endpoint.type} accessible (normal for public sites)`;
+        }
+        // Default for other accessible endpoints
         else if (response.status === 200) {
           details = `✓ ${endpoint.type} accessible (${response.status})`;
         }

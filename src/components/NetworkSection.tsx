@@ -185,14 +185,22 @@ export function NetworkSection({ network }: NetworkSectionProps) {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pl-7">
                 {network.endpoints.endpoints.map((endpoint, idx) => (
                   <div key={idx} className={`p-3 rounded-lg border ${
+                    endpoint.risk === 'critical' ? 'bg-destructive/20 border-destructive animate-pulse' :
                     endpoint.risk === 'high' ? 'bg-destructive/10 border-destructive/20' : 
                     endpoint.risk === 'medium' ? 'bg-warning/10 border-warning/20' : 'bg-muted/50'
                   }`}>
                     <div className="flex items-center justify-between mb-1">
-                      <p className="font-mono text-sm font-semibold">{endpoint.path}</p>
+                      <div className="flex items-center gap-2">
+                        {endpoint.risk === 'critical' && <span className="text-lg">🚨</span>}
+                        {endpoint.risk === 'high' && <span>🔴</span>}
+                        <p className="font-mono text-sm font-semibold">{endpoint.path}</p>
+                      </div>
                       <Badge variant="outline" className="text-xs">{endpoint.status}</Badge>
                     </div>
                     <p className="text-xs text-muted-foreground">{endpoint.details}</p>
+                    {endpoint.risk === 'critical' && (
+                      <p className="text-xs font-bold text-destructive mt-1">⚠️ IMMEDIATE ACTION REQUIRED</p>
+                    )}
                   </div>
                 ))}
               </div>

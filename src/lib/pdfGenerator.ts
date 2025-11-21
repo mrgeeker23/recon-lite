@@ -47,6 +47,7 @@ export function generatePDFReport(result: ScanResult): void {
     ['Risk Level', result.riskLevel],
     ['Trust Score', `${result.trustScore}/100`],
     ['Total Issues', result.issues.length.toString()],
+    ['Critical Severity', result.issues.filter(i => i.severity === 'critical').length.toString()],
     ['High Severity', result.issues.filter(i => i.severity === 'high').length.toString()],
     ['Medium Severity', result.issues.filter(i => i.severity === 'medium').length.toString()],
     ['Low Severity', result.issues.filter(i => i.severity === 'low').length.toString()]
@@ -106,7 +107,9 @@ export function generatePDFReport(result: ScanResult): void {
 
       // Severity badge
       doc.setFontSize(10);
-      if (issue.severity === 'high') {
+      if (issue.severity === 'critical') {
+        doc.setTextColor(153, 27, 27); // Darker red for critical
+      } else if (issue.severity === 'high') {
         doc.setTextColor(220, 38, 38);
       } else if (issue.severity === 'medium') {
         doc.setTextColor(234, 179, 8);
