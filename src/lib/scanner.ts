@@ -816,150 +816,89 @@ export function detectTechnology(url: string): TechnologyInfo {
 }
 
 export function analyzeRTI(url: string): RTIInfo {
-  // Simulated RTI (Regional Threat Intelligence) analysis for APAC patterns
-  const urlObj = new URL(url);
-  const domain = urlObj.hostname.toLowerCase();
-  const tld = domain.split('.').pop() || '';
+  const domain = new URL(url).hostname;
   
-  // APAC TLDs
-  const apacTlds = ['in', 'ph', 'id', 'my', 'sg', 'asia', 'pw', 'cn', 'tw', 'kr', 'jp', 'th', 'vn'];
-  const isApacTld = apacTlds.includes(tld);
-  
-  // Cheap hosting detection (simulated)
-  const cheapHostingProviders = ['cpanel', 'plesk', 'shared', 'hostinger', 'godaddy'];
-  const hasCheapHosting = Math.random() > 0.7;
-  
-  // WordPress detection
-  const hasWordPress = Math.random() > 0.5;
-  const wpOutdated = hasWordPress && Math.random() > 0.6;
-  
-  // External JS from suspicious TLDs
-  const suspiciousTlds = ['.asia', '.pw', '.tk', '.ml', '.ga'];
-  const hasSuspiciousJS = Math.random() > 0.7;
-  
-  // Redirect detection
-  const hasRedirects = Math.random() > 0.65;
-  
-  // APAC phishing patterns
-  const phishingPatterns = ['/verify/', '/otp/', '/login/secure/', '/pan-update/', '/kyc-update/'];
-  const hasPhishingPattern = Math.random() > 0.75;
-  
-  // SEA threat group JS naming
-  const hasThreatJS = Math.random() > 0.8;
-  
-  // Missing TLS on subdomains
-  const missingTLS = !url.startsWith('https://') || Math.random() > 0.85;
-  
-  // Gov phishing clone detection
-  const hasGovClone = Math.random() > 0.8;
-  
-  // Build detected patterns
-  const detectedPatterns = [
-    {
-      category: 'Cheap Shared Hosting',
-      detected: hasCheapHosting,
-      details: hasCheapHosting 
-        ? 'Detected cPanel/Plesk hosting environment commonly used in APAC scam operations'
-        : 'No cheap shared hosting indicators detected'
-    },
-    {
-      category: 'Outdated WordPress',
-      detected: wpOutdated,
-      details: wpOutdated 
-        ? 'Outdated WordPress version detected - common in India/SEA threat campaigns'
-        : hasWordPress 
-          ? 'WordPress detected but appears up-to-date'
-          : 'No WordPress installation detected'
-    },
-    {
-      category: 'Suspicious External JS',
-      detected: hasSuspiciousJS,
-      details: hasSuspiciousJS 
-        ? `External JavaScript loaded from unknown ${suspiciousTlds[Math.floor(Math.random() * suspiciousTlds.length)]} domain`
-        : 'No suspicious external JavaScript sources detected'
-    },
-    {
-      category: 'Redirect Patterns',
-      detected: hasRedirects,
-      details: hasRedirects 
-        ? 'Multiple redirects to external domains detected - common scam tactic'
-        : 'No suspicious redirect patterns detected'
-    },
-    {
-      category: 'APAC Phishing Kit Structure',
-      detected: hasPhishingPattern,
-      details: hasPhishingPattern 
-        ? `URL structure matches known APAC phishing kits: ${phishingPatterns[Math.floor(Math.random() * phishingPatterns.length)]}`
-        : 'No APAC phishing kit patterns detected'
-    },
-    {
-      category: 'SEA Threat Group JS Naming',
-      detected: hasThreatJS,
-      details: hasThreatJS 
-        ? 'JavaScript naming patterns match known SEA threat group fingerprints (e.g., main.min.9832.js, validate.sec.js)'
-        : 'No threat group JavaScript naming patterns detected'
-    },
-    {
-      category: 'Missing TLS',
-      detected: missingTLS,
-      details: missingTLS 
-        ? 'Subdomains or main domain missing TLS encryption - security risk'
-        : 'TLS properly configured across all detected endpoints'
-    },
-    {
-      category: 'Gov Phishing Clone',
-      detected: hasGovClone,
-      details: hasGovClone 
-        ? 'Design elements match APAC government portal phishing clones (banking, post, gov services)'
-        : 'No government phishing clone indicators detected'
-    }
-  ];
-  
-  // Regional indicators
-  const regionalIndicators = [
-    {
-      indicator: 'Country TLD',
-      value: isApacTld ? `APAC Region (.${tld})` : `Non-APAC (.${tld})`,
-      risk: isApacTld ? ('medium' as const) : ('low' as const)
-    },
-    {
-      indicator: 'Hosting Provider',
-      value: hasCheapHosting ? 'Cheap Shared Hosting' : 'Standard Hosting',
-      risk: hasCheapHosting ? ('high' as const) : ('low' as const)
-    },
-    {
-      indicator: 'Domain Age',
-      value: Math.random() > 0.5 ? 'Recently Registered' : 'Established Domain',
-      risk: Math.random() > 0.5 ? ('high' as const) : ('low' as const)
-    }
-  ];
-  
-  // Calculate likelihood score
+  // Analyze based on actual domain characteristics
   let likelihood = 0;
-  detectedPatterns.forEach(pattern => {
-    if (pattern.detected) likelihood += 12.5;
+  const detectedPatterns: RTIInfo['detectedPatterns'] = [];
+  const regionalIndicators: RTIInfo['regionalIndicators'] = [];
+  
+  // Check for suspicious TLDs (actually risky ones)
+  const suspiciousTLDs = ['.tk', '.ml', '.ga', '.cf', '.gq', '.pw', '.cc'];
+  const hasSuspiciousTLD = suspiciousTLDs.some(tld => domain.endsWith(tld));
+  
+  detectedPatterns.push({
+    category: 'Non-Standard TLD',
+    detected: hasSuspiciousTLD,
+    details: hasSuspiciousTLD ? `Domain uses high-risk TLD commonly associated with phishing` : 'Standard TLD in use'
   });
   
-  // Adjust for APAC TLD
-  if (isApacTld) likelihood += 10;
+  if (hasSuspiciousTLD) {
+    likelihood += 15;
+    regionalIndicators.push({
+      indicator: 'TLD Risk',
+      value: 'High-risk TLD detected',
+      risk: 'high'
+    });
+  }
   
-  // Cap at 100
-  likelihood = Math.min(100, Math.round(likelihood));
+  // Check for random-looking domains
+  const hasRandomPattern = /[0-9]{3,}/.test(domain) || domain.split('.')[0].length > 20;
+  detectedPatterns.push({
+    category: 'Random Domain Pattern',
+    detected: hasRandomPattern,
+    details: hasRandomPattern ? 'Domain contains suspicious random patterns' : 'Domain structure appears normal'
+  });
   
-  // Determine verdict
+  if (hasRandomPattern) {
+    likelihood += 10;
+    regionalIndicators.push({
+      indicator: 'Domain Structure',
+      value: 'Suspicious random pattern',
+      risk: 'medium'
+    });
+  }
+  
+  // Check for typosquatting patterns (fake common brands)
+  const typoPatterns = ['gooogle', 'micros0ft', 'amaz0n', 'paypa1', 'facebo0k'];
+  const hasTypoPattern = typoPatterns.some(pattern => domain.includes(pattern));
+  
+  detectedPatterns.push({
+    category: 'Brand Impersonation',
+    detected: hasTypoPattern,
+    details: hasTypoPattern ? 'Domain appears to impersonate well-known brand' : 'No brand impersonation detected'
+  });
+  
+  if (hasTypoPattern) {
+    likelihood += 25;
+    regionalIndicators.push({
+      indicator: 'Typosquatting',
+      value: 'Brand impersonation detected',
+      risk: 'high'
+    });
+  }
+  
+  // Only add safe indicator if nothing suspicious detected
+  if (regionalIndicators.length === 0) {
+    regionalIndicators.push({
+      indicator: 'Domain Analysis',
+      value: 'No significant threats detected',
+      risk: 'low'
+    });
+  }
+  
+  // Determine verdict based on actual likelihood
   let verdict = '';
-  if (likelihood >= 75) {
-    verdict = 'High likelihood of APAC-region threat patterns detected. Exercise extreme caution.';
-  } else if (likelihood >= 50) {
-    verdict = 'Moderate APAC threat indicators present. Further investigation recommended.';
-  } else if (likelihood >= 25) {
-    verdict = 'Some regional patterns detected, but overall risk appears low.';
+  if (likelihood >= 40) {
+    verdict = 'High likelihood of malicious patterns detected. Exercise extreme caution.';
+  } else if (likelihood >= 20) {
+    verdict = 'Some suspicious indicators present. Further investigation recommended.';
   } else {
-    verdict = 'Minimal APAC threat patterns detected. Site appears clean.';
+    verdict = 'Minimal threat patterns detected. Site appears legitimate.';
   }
   
   return {
-    likelihood,
+    likelihood: Math.min(100, likelihood),
     detectedPatterns,
     regionalIndicators,
     verdict
@@ -1178,46 +1117,55 @@ export function analyzeJSSecurity(url: string): JSSecurityInfo {
 }
 
 export function analyzeScamDetection(url: string, rti: RTIInfo): ScamDetectionInfo {
-  const domain = new URL(url).hostname;
   const matchedTemplates: string[] = [];
   let templateMatch = 0;
+  const domain = new URL(url).hostname;
   
-  // Check for common scam patterns
-  if (domain.includes('verify') || domain.includes('secure') || domain.includes('update')) {
-    matchedTemplates.push('Phishing verification template');
+  // Check for actual scam indicators based on RTI findings
+  const hasHighRTI = rti.likelihood > 40;
+  const hasSuspiciousTLD = rti.detectedPatterns.some(p => 
+    p.category === 'Non-Standard TLD' && p.detected
+  );
+  const hasTyposquat = rti.detectedPatterns.some(p => 
+    p.category === 'Brand Impersonation' && p.detected
+  );
+  
+  // Only flag if there's actual evidence
+  if (hasTyposquat) {
+    matchedTemplates.push('Brand impersonation pattern detected');
     templateMatch += 30;
   }
   
-  if (rti.detectedPatterns.some(p => p.category === 'APAC Phishing Kit Structure' && p.detected)) {
-    matchedTemplates.push('APAC phishing kit structure');
-    templateMatch += 25;
-  }
-  
-  if (rti.detectedPatterns.some(p => p.category === 'SEA Threat Group JS Naming' && p.detected)) {
-    matchedTemplates.push('SEA scam kit JavaScript patterns');
+  if (hasSuspiciousTLD && hasHighRTI) {
+    matchedTemplates.push('High-risk TLD with suspicious characteristics');
     templateMatch += 20;
   }
   
-  if (Math.random() > 0.6) {
-    matchedTemplates.push('Generic credential harvesting page');
-    templateMatch += 15;
+  // Check for login/credential patterns in legitimate domains
+  const hasLoginPattern = domain.includes('login') || domain.includes('signin') || 
+                          domain.includes('verify') || domain.includes('secure');
+  
+  if (hasLoginPattern && (hasSuspiciousTLD || hasTyposquat)) {
+    matchedTemplates.push('Credential harvesting page pattern');
+    templateMatch += 25;
   }
   
-  const jsKitMatch = rti.detectedPatterns.some(
-    p => p.category === 'SEA Threat Group JS Naming' && p.detected
-  );
+  // JS kit detection based on actual patterns
+  const jsKitMatch = hasTyposquat && hasLoginPattern;
   
   const redirectBehavior: 'safe' | 'suspicious' | 'dangerous' = 
-    rti.detectedPatterns.some(p => p.category === 'Redirects to Scam Domains' && p.detected) ? 'dangerous' :
-    Math.random() > 0.5 ? 'suspicious' : 'safe';
+    templateMatch >= 50 ? 'dangerous' :
+    templateMatch >= 30 ? 'suspicious' : 'safe';
   
   let overallVerdict = '';
   if (templateMatch >= 60 && jsKitMatch) {
-    overallVerdict = `This site resembles ${matchedTemplates.length} known scam templates (${templateMatch}% match). JS naming patterns similar to SEA scam kits. High redirect-to-unknown TLD behavior.`;
-  } else if (templateMatch >= 40) {
+    overallVerdict = `This site shows strong indicators of being a scam (${templateMatch}% match). Multiple phishing patterns detected.`;
+  } else if (templateMatch >= 30) {
     overallVerdict = `Moderate scam indicators detected (${templateMatch}% template match). Some suspicious patterns present.`;
+  } else if (matchedTemplates.length > 0) {
+    overallVerdict = `Minor concerns detected (${templateMatch}% match). Site should be verified before trusting.`;
   } else {
-    overallVerdict = `Low scam template match (${templateMatch}%). Site structure appears relatively normal.`;
+    overallVerdict = `No scam template indicators detected. Site structure appears legitimate.`;
   }
   
   return {
@@ -1405,17 +1353,30 @@ export function calculateTrustScore(
   scamDetection: ScamDetectionInfo,
   rti: RTIInfo
 ): number {
+  // Start with security score as baseline
   let trustScore = score;
   
-  // Reduce trust based on scam detection
-  trustScore -= scamDetection.templateMatch * 0.5;
+  // Only reduce trust if there's actual scam evidence (not random)
+  if (scamDetection.matchedTemplates.length > 0) {
+    // More moderate reduction: max 20 points for severe scam indicators
+    trustScore -= Math.min(20, scamDetection.templateMatch * 0.25);
+  }
   
-  // Reduce trust based on RTI likelihood
-  trustScore -= rti.likelihood * 0.3;
+  // Only reduce for RTI if there's real evidence (not random)
+  if (rti.likelihood > 30 && rti.detectedPatterns.some(p => p.detected)) {
+    // More moderate reduction: max 15 points for high RTI
+    trustScore -= Math.min(15, rti.likelihood * 0.15);
+  }
   
-  // Reduce trust based on critical themes
+  // Reduce trust based on critical themes (these are based on actual findings)
   const criticalThemes = riskThemes.filter(t => t.severity === 'critical').length;
-  trustScore -= criticalThemes * 15;
+  trustScore -= criticalThemes * 12;
+  
+  // For sites with no critical issues and decent security score, maintain reasonable trust
+  if (score >= 40 && criticalThemes === 0 && scamDetection.templateMatch < 30) {
+    // Boost trust for legitimate-looking sites
+    trustScore = Math.max(trustScore, score - 15);
+  }
   
   // Ensure score is between 0-100
   return Math.max(0, Math.min(100, Math.round(trustScore)));
