@@ -187,6 +187,74 @@ export function generatePDFReport(result: ScanResult): void {
 
   yPos = (doc as any).lastAutoTable.finalY + 15;
 
+  // SEO Analysis Section
+  checkPageBreak(70);
+  doc.setFontSize(16);
+  doc.setTextColor(0, 0, 0);
+  doc.setFont('helvetica', 'bold');
+  doc.text('SEO Analysis', 20, yPos);
+  yPos += 10;
+
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(60, 60, 60);
+  doc.text(`Overall SEO Score: ${result.seo.seoScore}/100`, 20, yPos);
+  yPos += 10;
+
+  // SEO Score Breakdown
+  const seoBreakdownData = result.seo.seoScoreBreakdown.map(item => [
+    item.category,
+    `${item.score}/${item.maxScore}`,
+    item.details
+  ]);
+
+  autoTable(doc, {
+    startY: yPos,
+    head: [['Category', 'Score', 'Details']],
+    body: seoBreakdownData,
+    theme: 'striped',
+    headStyles: { fillColor: [59, 130, 246], fontStyle: 'bold' },
+    bodyStyles: { fontSize: 8 },
+    margin: { left: 20, right: 20 },
+    columnStyles: {
+      0: { cellWidth: 40 },
+      1: { cellWidth: 20, halign: 'center' },
+      2: { cellWidth: 90 }
+    }
+  });
+
+  yPos = (doc as any).lastAutoTable.finalY + 12;
+
+  // SEO Technical Checklist
+  const seoChecklistData = [
+    ['Title Tag', result.seo.hasTitle ? '✓' : '✗', result.seo.titleLength ? `${result.seo.titleLength} chars` : 'N/A'],
+    ['Meta Description', result.seo.hasMetaDescription ? '✓' : '✗', result.seo.metaDescriptionLength ? `${result.seo.metaDescriptionLength} chars` : 'N/A'],
+    ['H1 Tag', result.seo.hasH1 ? '✓' : '✗', result.seo.hasH1 ? 'Present' : 'Missing'],
+    ['Canonical URL', result.seo.hasCanonical ? '✓' : '✗', result.seo.hasCanonical ? 'Present' : 'Missing'],
+    ['Robots Meta', result.seo.hasRobotsMeta ? '✓' : '✗', result.seo.hasRobotsMeta ? 'Present' : 'Missing'],
+    ['XML Sitemap', result.seo.hasSitemap ? '✓' : '✗', result.seo.hasSitemap ? 'Present' : 'Missing'],
+    ['Structured Data', result.seo.hasStructuredData ? '✓' : '✗', result.seo.hasStructuredData ? 'Present' : 'Missing'],
+    ['Mobile Responsive', result.seo.mobileResponsive ? '✓' : '✗', result.seo.mobileResponsive ? 'Yes' : 'No'],
+    ['Page Load Speed', result.seo.pageLoadSpeed === 'fast' ? '✓' : result.seo.pageLoadSpeed === 'moderate' ? '~' : '✗', result.seo.pageLoadSpeed.toUpperCase()],
+    ['Image Optimization', result.seo.imageOptimization === 'good' ? '✓' : result.seo.imageOptimization === 'fair' ? '~' : '✗', result.seo.imageOptimization.toUpperCase()]
+  ];
+
+  autoTable(doc, {
+    startY: yPos,
+    head: [['SEO Element', 'Status', 'Value']],
+    body: seoChecklistData,
+    theme: 'striped',
+    headStyles: { fillColor: [59, 130, 246], fontStyle: 'bold' },
+    margin: { left: 20, right: 20 },
+    columnStyles: {
+      0: { cellWidth: 50 },
+      1: { cellWidth: 20, halign: 'center' },
+      2: { cellWidth: 80 }
+    }
+  });
+
+  yPos = (doc as any).lastAutoTable.finalY + 15;
+
   // Compliance Mapping Section
   doc.addPage();
   yPos = 20;
