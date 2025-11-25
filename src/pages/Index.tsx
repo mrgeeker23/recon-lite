@@ -62,16 +62,16 @@ const Index = () => {
         
         <header className="text-center space-y-3 py-4">
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold font-tech tracking-tight bg-gradient-to-r from-primary via-primary/80 to-primary bg-clip-text text-transparent">
-            SITE SCANNER LITE
+            RECONLITE
           </h1>
           <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto">
-            Comprehensive Website Security, SEO & Network Intelligence Scanner
+            Lightweight Security Reconnaissance & Compliance Framework Mapping
           </p>
           <div className="flex flex-wrap justify-center gap-2 text-xs sm:text-sm text-muted-foreground">
-            <span className="px-3 py-1 bg-primary/10 rounded-full">Security Analysis</span>
-            <span className="px-3 py-1 bg-primary/10 rounded-full">SEO Audit</span>
-            <span className="px-3 py-1 bg-primary/10 rounded-full">Network Intelligence</span>
-            <span className="px-3 py-1 bg-primary/10 rounded-full">Technology Detection</span>
+            <span className="px-3 py-1 bg-primary/10 rounded-full">Security Headers</span>
+            <span className="px-3 py-1 bg-primary/10 rounded-full">Compliance Mapping</span>
+            <span className="px-3 py-1 bg-primary/10 rounded-full">Framework Analysis</span>
+            <span className="px-3 py-1 bg-primary/10 rounded-full">Educational Tool</span>
           </div>
         </header>
 
