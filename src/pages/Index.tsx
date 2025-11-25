@@ -71,7 +71,7 @@ const Index = () => {
             <span className="px-3 py-1 bg-primary/10 rounded-full">Security Headers</span>
             <span className="px-3 py-1 bg-primary/10 rounded-full">Compliance Mapping</span>
             <span className="px-3 py-1 bg-primary/10 rounded-full">Framework Analysis</span>
-            <span className="px-3 py-1 bg-primary/10 rounded-full">Report Generation</span>
+            <span className="px-3 py-1 bg-primary/10 rounded-full">Risk Assessment</span>
           </div>
         </header>
 
