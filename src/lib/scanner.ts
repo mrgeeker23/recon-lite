@@ -247,7 +247,8 @@ const SECURITY_CHECKS = [
           return true;
         }
       }
-      return params.toString().length > 50 && Math.random() > 0.7;
+      // Only flag if actual XSS patterns are found in URL parameters
+      return false;
     }
   },
   {
@@ -262,7 +263,8 @@ const SECURITY_CHECKS = [
     check: (url: string) => {
       const urlParams = new URL(url).searchParams;
       const dbParams = ['id', 'user', 'userid', 'query', 'search', 'page', 'item', 'cat', 'category'];
-      return dbParams.some(param => urlParams.has(param)) && Math.random() > 0.7;
+      // Only flag if actual SQL injection patterns are found
+      return false;
     }
   },
   {
@@ -275,8 +277,8 @@ const SECURITY_CHECKS = [
     fix: 'Obtain and install a valid SSL/TLS certificate from a trusted Certificate Authority (Let\'s Encrypt offers free certificates). Enable HTTPS across the entire site. Implement HTTP Strict Transport Security (HSTS) headers. Redirect all HTTP traffic to HTTPS. Regularly monitor certificate expiration dates.',
     references: ['SSL Labs Server Test', 'Let\'s Encrypt Documentation', 'OWASP Transport Layer Protection Cheat Sheet'],
     check: (url: string) => {
-      if (url.startsWith('http://')) return true;
-      return Math.random() > 0.9;
+      // Only flag actual HTTP (non-HTTPS) URLs
+      return url.startsWith('http://');
     }
   },
   {
@@ -291,7 +293,7 @@ const SECURITY_CHECKS = [
     check: (url: string) => {
       const urlObj = new URL(url);
       const path = urlObj.pathname.toLowerCase();
-      return path.includes('.env') || path.includes('config') && Math.random() > 0.75;
+      return path.includes('.env') || path.includes('config.php') || path.includes('config.json');
     }
   },
   {
@@ -304,7 +306,8 @@ const SECURITY_CHECKS = [
     fix: 'Never use wildcard (*) origin with credentials. Specify exact allowed origins. Validate Origin header server-side. Use credentials: "same-origin" when possible. Implement proper CORS policy with whitelist of trusted domains. Avoid reflecting Origin header without validation.',
     references: ['OWASP: CORS Security', 'MDN: CORS Documentation', 'PortSwigger: CORS Vulnerabilities'],
     check: (url: string) => {
-      return Math.random() > 0.65;
+      // Cannot detect CORS misconfiguration from URL alone - requires active scan
+      return false;
     }
   },
   {
@@ -320,7 +323,7 @@ const SECURITY_CHECKS = [
       const urlObj = new URL(url);
       const path = urlObj.pathname.toLowerCase();
       const suspiciousPaths = ['/backup', '/old', '/files', '/uploads', '/assets', '/static', '/data'];
-      return suspiciousPaths.some(p => path.includes(p)) && Math.random() > 0.7;
+      return suspiciousPaths.some(p => path.includes(p));
     }
   },
   {
@@ -333,7 +336,8 @@ const SECURITY_CHECKS = [
     fix: 'Update all JavaScript libraries to their latest stable versions. Use npm audit or Snyk to detect vulnerable dependencies. Implement Content Security Policy (CSP). Consider using modern frameworks with better security. Set up automated dependency updates.',
     references: ['jQuery Security', 'Snyk Vulnerability Database', 'npm audit Documentation', 'CVE-2020-11022'],
     check: (url: string) => {
-      return Math.random() > 0.6;
+      // Cannot detect deprecated JS libraries from URL alone - would require page content analysis
+      return false;
     }
   },
   {
@@ -346,7 +350,8 @@ const SECURITY_CHECKS = [
     fix: 'Convert all resource URLs to HTTPS. Use protocol-relative URLs (//example.com/script.js) or https:// explicitly. Enable Content Security Policy with upgrade-insecure-requests directive. Check all external resources support HTTPS.',
     references: ['MDN: Mixed Content', 'OWASP: Transport Layer Protection', 'Content Security Policy Guide'],
     check: (url: string) => {
-      return url.startsWith('https://') && Math.random() > 0.7;
+      // Cannot detect mixed content from URL alone - would require page content analysis
+      return false;
     }
   },
   {
@@ -358,7 +363,7 @@ const SECURITY_CHECKS = [
     technicalDetails: 'Missing headers:\n• X-Frame-Options: DENY/SAMEORIGIN - prevents clickjacking\n• X-Content-Type-Options: nosniff - prevents MIME-sniffing\n• Content-Security-Policy - mitigates XSS, data injection\n• Strict-Transport-Security: max-age=31536000 - enforces HTTPS\n• X-XSS-Protection: 1; mode=block - legacy XSS protection\n• Referrer-Policy: strict-origin-when-cross-origin - controls referrer info\n• Permissions-Policy - restricts browser features',
     fix: 'Add security headers to server configuration:\n\nApache (.htaccess):\nHeader set X-Frame-Options "DENY"\nHeader set X-Content-Type-Options "nosniff"\nHeader set Content-Security-Policy "default-src \'self\'"\nHeader set Strict-Transport-Security "max-age=31536000; includeSubDomains"\n\nnginx:\nadd_header X-Frame-Options "DENY";\nadd_header X-Content-Type-Options "nosniff";\nadd_header Content-Security-Policy "default-src \'self\'";\nadd_header Strict-Transport-Security "max-age=31536000; includeSubDomains";',
     references: ['OWASP Secure Headers Project', 'Security Headers Check Tool', 'MDN Web Security'],
-    check: (url: string) => !url.startsWith('https://') || Math.random() > 0.5
+    check: (url: string) => !url.startsWith('https://')
   },
   {
     id: 'insecure-cookies',
@@ -372,7 +377,7 @@ const SECURITY_CHECKS = [
     check: (url: string) => {
       const urlObj = new URL(url);
       const cookiePaths = ['/login', '/account', '/dashboard', '/admin', '/user', '/profile'];
-      return cookiePaths.some(path => urlObj.pathname.includes(path)) || Math.random() > 0.75;
+      return cookiePaths.some(path => urlObj.pathname.includes(path));
     }
   },
   {
@@ -556,7 +561,8 @@ const SECURITY_CHECKS = [
     technicalDetails: 'The Strict-Transport-Security header tells browsers to only use HTTPS for future requests. Missing HSTS allows attackers to intercept first-time visitors or users who type HTTP URLs.',
     fix: 'Implement HSTS header: Strict-Transport-Security: max-age=31536000; includeSubDomains; preload. Start with shorter max-age for testing. Consider HSTS preloading for maximum protection.',
     references: ['OWASP: HSTS Cheat Sheet', 'MDN: Strict-Transport-Security'],
-    check: (url: string) => url.startsWith('https://') && Math.random() > 0.6
+    // Cannot detect missing HSTS from URL alone - would require HTTP response header analysis
+    check: (url: string) => false
   },
   {
     id: 'missing-csp',
@@ -567,7 +573,8 @@ const SECURITY_CHECKS = [
     technicalDetails: 'CSP defines which content sources are trustworthy. Missing CSP allows any script to execute, any resource to load, and provides no defense-in-depth against code injection attacks.',
     fix: 'Implement strict CSP: Content-Security-Policy: default-src \'self\'; script-src \'self\'; style-src \'self\' \'unsafe-inline\'. Start with report-only mode to test. Gradually tighten policy.',
     references: ['OWASP: CSP Cheat Sheet', 'MDN: Content-Security-Policy', 'CSP Evaluator'],
-    check: (url: string) => Math.random() > 0.55
+    // Cannot detect missing CSP from URL alone - would require HTTP response header analysis
+    check: (url: string) => false
   },
   {
     id: 'clickjacking-risk',
@@ -578,7 +585,8 @@ const SECURITY_CHECKS = [
     technicalDetails: 'Without X-Frame-Options or frame-ancestors CSP directive, any site can embed your pages in iframes. Clickjacking overlays transparent iframes to hijack user clicks.',
     fix: 'Set X-Frame-Options: DENY or SAMEORIGIN header. Alternatively, use CSP frame-ancestors directive. Implement frame-busting JavaScript as additional protection. Test with frame-busting tools.',
     references: ['OWASP: Clickjacking Defense', 'CWE-1021: Frame Embedding'],
-    check: (url: string) => Math.random() > 0.65
+    // Cannot detect clickjacking risk from URL alone - would require HTTP response header analysis
+    check: (url: string) => false
   }
 ];
 
@@ -1035,7 +1043,7 @@ export function analyzeFrameworkRisk(technology: TechnologyInfo): FrameworkRiskI
   
   return {
     framework,
-    version: Math.random() > 0.5 ? 'Outdated' : 'Current',
+    version: undefined, // Cannot determine version from URL alone
     riskScore,
     vulnerabilities,
     recommendation
@@ -1043,71 +1051,30 @@ export function analyzeFrameworkRisk(technology: TechnologyInfo): FrameworkRiskI
 }
 
 export function analyzeJSSecurity(url: string): JSSecurityInfo {
+  // NOTE: Real JS security analysis would require fetching and parsing the actual JavaScript files
+  // This is a demonstration of what the analysis would detect - actual implementation
+  // would need server-side processing or browser extension capabilities
+  
+  const urlObj = new URL(url);
+  const path = urlObj.pathname.toLowerCase();
+  
   const exposedSecrets: JSSecurityInfo['exposedSecrets'] = [];
   const suspiciousPatterns: string[] = [];
   
-  // Simulate detection patterns
-  if (Math.random() > 0.6) {
-    exposedSecrets.push({
-      type: 'API Key',
-      severity: 'high',
-      location: 'main.js line 142',
-      preview: 'const API_KEY = "sk_live_51H..."'
-    });
+  // Check for patterns in URL that suggest potential JS security concerns
+  const sensitiveJsFiles = ['config.js', 'env.js', 'settings.js', 'constants.js'];
+  if (sensitiveJsFiles.some(file => path.includes(file))) {
+    suspiciousPatterns.push('Sensitive configuration file detected in URL path');
   }
   
-  if (Math.random() > 0.7) {
-    exposedSecrets.push({
-      type: 'Access Token',
-      severity: 'high',
-      location: 'config.js line 23',
-      preview: 'token: "eyJhbGciOiJIUzI1NiIsInR..."'
-    });
-  }
-  
-  if (Math.random() > 0.5) {
-    exposedSecrets.push({
-      type: 'Internal Endpoint',
-      severity: 'medium',
-      location: 'app.js line 89',
-      preview: 'apiUrl: "https://internal-api.company.local"'
-    });
-  }
-  
-  if (Math.random() > 0.6) {
-    exposedSecrets.push({
-      type: 'Admin Route',
-      severity: 'medium',
-      location: 'router.js line 45',
-      preview: 'path: "/secret-admin-panel"'
-    });
-  }
-  
-  if (Math.random() > 0.8) {
-    exposedSecrets.push({
-      type: 'Debug Flag',
-      severity: 'low',
-      location: 'init.js line 12',
-      preview: 'DEBUG_MODE: true'
-    });
-  }
-  
-  // Suspicious patterns
-  if (exposedSecrets.length > 0) {
-    suspiciousPatterns.push('Hardcoded credentials detected');
-  }
-  
-  if (Math.random() > 0.5) {
-    suspiciousPatterns.push('Obfuscated JavaScript code present');
-  }
-  
-  if (Math.random() > 0.6) {
-    suspiciousPatterns.push('External script loading without SRI');
+  // Check for bundle files that commonly contain exposed data
+  if (path.includes('bundle') && path.endsWith('.js')) {
+    suspiciousPatterns.push('JavaScript bundle may contain embedded configuration');
   }
   
   const riskLevel: 'low' | 'medium' | 'high' = 
-    exposedSecrets.some(s => s.severity === 'high') ? 'high' :
-    exposedSecrets.some(s => s.severity === 'medium') ? 'medium' : 'low';
+    exposedSecrets.length > 0 ? 'high' :
+    suspiciousPatterns.length > 0 ? 'medium' : 'low';
   
   return {
     exposedSecrets,
