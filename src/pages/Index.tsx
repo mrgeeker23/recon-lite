@@ -67,6 +67,9 @@ const Index = () => {
           <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto">
             Lightweight Security Reconnaissance & Compliance Framework Mapping
           </p>
+          <p className="text-sm text-muted-foreground/70 max-w-xl mx-auto">
+            Educational prototype demonstrating passive security analysis techniques
+          </p>
           <div className="flex flex-wrap justify-center gap-2 text-xs sm:text-sm text-muted-foreground">
             <span className="px-3 py-1 bg-primary/10 rounded-full">Security Headers</span>
             <span className="px-3 py-1 bg-primary/10 rounded-full">Compliance Mapping</span>
