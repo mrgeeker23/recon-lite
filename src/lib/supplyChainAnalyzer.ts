@@ -117,14 +117,6 @@ const LIBRARY_DATABASE: Record<string, {
     vulnerableBelow: '1.6.0',
     knownVulnerabilities: ['CVE-2023-45857 (CSRF token leak)']
   },
-  'ember': {
-    latestVersion: '5.7.0',
-    license: 'MIT'
-  },
-  'knockout': {
-    latestVersion: '3.5.1',
-    license: 'MIT'
-  },
   'handlebars': {
     latestVersion: '4.7.8',
     license: 'MIT',
