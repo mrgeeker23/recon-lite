@@ -609,6 +609,55 @@ export function generatePDFReport(result: ScanResult): void {
     yPos += 5;
   }
 
+  // Supply Chain Security / SBOM
+  if (result.supplyChain && result.supplyChain.dependencies.length > 0) {
+    doc.addPage();
+    yPos = 20;
+
+    doc.setFontSize(16);
+    doc.setTextColor(0, 0, 0);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Supply Chain Security & SBOM', 20, yPos);
+    yPos += 10;
+
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(60, 60, 60);
+    doc.text(`Total Dependencies: ${result.supplyChain.summary.totalDependencies} | Vulnerable: ${result.supplyChain.summary.vulnerableCount} | Outdated: ${result.supplyChain.summary.outdatedCount} | EOL: ${result.supplyChain.summary.eolCount} | Overall Risk: ${result.supplyChain.summary.overallRisk.toUpperCase()}`, 20, yPos);
+    yPos += 12;
+
+    const sbomData = result.supplyChain.sbom.map(entry => [
+      entry.packageName,
+      entry.version,
+      entry.source,
+      entry.license,
+      entry.status,
+      entry.risk.toUpperCase(),
+      entry.notes.substring(0, 40) + (entry.notes.length > 40 ? '...' : '')
+    ]);
+
+    autoTable(doc, {
+      startY: yPos,
+      head: [['Package', 'Version', 'Source', 'License', 'Status', 'Risk', 'Notes']],
+      body: sbomData,
+      theme: 'striped',
+      headStyles: { fillColor: [59, 130, 246], fontStyle: 'bold', fontSize: 8 },
+      bodyStyles: { fontSize: 7 },
+      margin: { left: 20, right: 20 },
+      columnStyles: {
+        0: { cellWidth: 25 },
+        1: { cellWidth: 15 },
+        2: { cellWidth: 18 },
+        3: { cellWidth: 18 },
+        4: { cellWidth: 18 },
+        5: { cellWidth: 15, halign: 'center' },
+        6: { cellWidth: 41 }
+      }
+    });
+
+    yPos = (doc as any).lastAutoTable.finalY + 15;
+  }
+
   // Technology Stack
   doc.addPage();
   yPos = 20;
