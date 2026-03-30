@@ -26,7 +26,8 @@ import {
   Unlock,
   AlertTriangle,
   Download,
-  FileText
+  FileText,
+  Package
 } from 'lucide-react';
 import { NetworkSection } from './NetworkSection';
 import { Button } from './ui/button';
@@ -509,6 +510,131 @@ export function ScanResults({ results }: ScanResultsProps) {
               </div>
             )}
           </Card>
+
+          {/* Supply Chain Security */}
+          {result.supplyChain && result.supplyChain.dependencies.length > 0 && (
+            <Card className="p-6">
+              <h3 className="text-2xl font-bold mb-4 flex items-center gap-2">
+                <Package className="w-6 h-6" />
+                Supply Chain Security & SBOM
+              </h3>
+              <div className="space-y-4">
+                {/* Summary Stats */}
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                  <div className="p-3 rounded-lg bg-muted/50 text-center">
+                    <p className="text-2xl font-bold">{result.supplyChain.summary.totalDependencies}</p>
+                    <p className="text-xs text-muted-foreground">Total Deps</p>
+                  </div>
+                  <div className="p-3 rounded-lg bg-destructive/10 text-center">
+                    <p className="text-2xl font-bold text-destructive">{result.supplyChain.summary.vulnerableCount}</p>
+                    <p className="text-xs text-muted-foreground">Vulnerable</p>
+                  </div>
+                  <div className="p-3 rounded-lg bg-warning/10 text-center">
+                    <p className="text-2xl font-bold">{result.supplyChain.summary.outdatedCount}</p>
+                    <p className="text-xs text-muted-foreground">Outdated</p>
+                  </div>
+                  <div className="p-3 rounded-lg bg-warning/10 text-center">
+                    <p className="text-2xl font-bold">{result.supplyChain.summary.eolCount}</p>
+                    <p className="text-xs text-muted-foreground">End-of-Life</p>
+                  </div>
+                  <div className="p-3 rounded-lg bg-success/10 text-center">
+                    <p className="text-2xl font-bold">{result.supplyChain.summary.currentCount}</p>
+                    <p className="text-xs text-muted-foreground">Current</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <span className="font-semibold text-sm">Overall Supply Chain Risk:</span>
+                  <Badge variant={
+                    result.supplyChain.summary.overallRisk === 'critical' ? 'destructive' :
+                    result.supplyChain.summary.overallRisk === 'high' ? 'destructive' :
+                    result.supplyChain.summary.overallRisk === 'medium' ? 'secondary' : 'default'
+                  }>
+                    {result.supplyChain.summary.overallRisk.toUpperCase()}
+                  </Badge>
+                </div>
+
+                <Separator />
+
+                {/* SBOM Table */}
+                <div>
+                  <p className="font-semibold mb-3">Software Bill of Materials (SBOM)</p>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b">
+                          <th className="text-left py-2 px-3 font-semibold text-muted-foreground">Package</th>
+                          <th className="text-left py-2 px-3 font-semibold text-muted-foreground">Version</th>
+                          <th className="text-left py-2 px-3 font-semibold text-muted-foreground">Source</th>
+                          <th className="text-left py-2 px-3 font-semibold text-muted-foreground">License</th>
+                          <th className="text-left py-2 px-3 font-semibold text-muted-foreground">Status</th>
+                          <th className="text-left py-2 px-3 font-semibold text-muted-foreground">Risk</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {result.supplyChain.sbom.map((entry, idx) => (
+                          <tr key={idx} className="border-b border-border/50">
+                            <td className="py-2 px-3 font-mono text-xs">{entry.packageName}</td>
+                            <td className="py-2 px-3 font-mono text-xs">{entry.version}</td>
+                            <td className="py-2 px-3 text-xs">{entry.source}</td>
+                            <td className="py-2 px-3 text-xs">{entry.license}</td>
+                            <td className="py-2 px-3">
+                              <Badge variant={
+                                entry.status === 'Vulnerable' ? 'destructive' :
+                                entry.status === 'Eol' ? 'destructive' :
+                                entry.status === 'Outdated' ? 'secondary' : 'default'
+                              } className="text-xs">
+                                {entry.status}
+                              </Badge>
+                            </td>
+                            <td className="py-2 px-3">
+                              <Badge variant={
+                                entry.risk === 'critical' ? 'destructive' :
+                                entry.risk === 'high' ? 'destructive' :
+                                entry.risk === 'medium' ? 'secondary' : 'default'
+                              } className="text-xs">
+                                {entry.risk.toUpperCase()}
+                              </Badge>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                {/* Vulnerability Details */}
+                {result.supplyChain.dependencies.filter(d => d.vulnerabilities && d.vulnerabilities.length > 0).length > 0 && (
+                  <>
+                    <Separator />
+                    <div>
+                      <p className="font-semibold mb-3 text-destructive">Vulnerability Details</p>
+                      <div className="space-y-2">
+                        {result.supplyChain.dependencies
+                          .filter(d => d.vulnerabilities && d.vulnerabilities.length > 0)
+                          .map((dep, idx) => (
+                            <div key={idx} className="p-3 rounded-lg border bg-destructive/5 border-destructive/20">
+                              <p className="font-semibold text-sm">{dep.name} v{dep.version}</p>
+                              <ul className="mt-1 space-y-1">
+                                {dep.vulnerabilities!.map((vuln, vIdx) => (
+                                  <li key={vIdx} className="text-xs text-muted-foreground flex items-start gap-1">
+                                    <AlertTriangle className="w-3 h-3 text-destructive flex-shrink-0 mt-0.5" />
+                                    {vuln}
+                                  </li>
+                                ))}
+                              </ul>
+                              {dep.latestVersion && (
+                                <p className="text-xs mt-2 text-success">→ Upgrade to v{dep.latestVersion}</p>
+                              )}
+                            </div>
+                          ))}
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+            </Card>
+          )}
 
           {/* SEO Analysis */}
           <Card className="p-6">

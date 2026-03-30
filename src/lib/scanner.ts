@@ -1,6 +1,7 @@
 import { performActiveScan } from './activeScanner';
 import { getMitreTechnique, MitreTechnique } from './mitreMapping';
 import { performCVEAnalysis, CVEMatch, TechnologyVersion } from './cveMatching';
+import { analyzeSupplyChain, analyzeSupplyChainFromURL, SupplyChainResult } from './supplyChainAnalyzer';
 
 export type Severity = 'critical' | 'high' | 'medium' | 'low';
 
@@ -205,6 +206,7 @@ export interface ScanResult {
   suspicionTags: SuspicionTag[];
   riskThemes: RiskTheme[];
   passiveCrawl: PassiveCrawlInfo;
+  supplyChain?: SupplyChainResult;
   healthMetrics: {
     uptime: string;
     responseTime: number;
@@ -1557,6 +1559,17 @@ export async function scanUrl(url: string): Promise<ScanResult> {
     lastModified: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toLocaleDateString()
   };
 
+  // Supply chain analysis (uses URL-based detection as fallback)
+  const supplyChain = analyzeSupplyChainFromURL(url);
+  
+  // Adjust score based on supply chain risk
+  if (supplyChain.summary.vulnerableCount > 0) {
+    score = Math.max(0, score - (supplyChain.summary.vulnerableCount * 8));
+  }
+  if (supplyChain.summary.eolCount > 0) {
+    score = Math.max(0, score - (supplyChain.summary.eolCount * 4));
+  }
+
   return {
     url,
     score,
@@ -1575,6 +1588,7 @@ export async function scanUrl(url: string): Promise<ScanResult> {
     suspicionTags,
     riskThemes,
     passiveCrawl,
+    supplyChain,
     healthMetrics
   };
 }
