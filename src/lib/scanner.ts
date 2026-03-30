@@ -1,6 +1,7 @@
 import { performActiveScan } from './activeScanner';
 import { getMitreTechnique, MitreTechnique } from './mitreMapping';
 import { performCVEAnalysis, CVEMatch, TechnologyVersion } from './cveMatching';
+import { analyzeSupplyChain, analyzeSupplyChainFromURL, SupplyChainResult } from './supplyChainAnalyzer';
 
 export type Severity = 'critical' | 'high' | 'medium' | 'low';
 
