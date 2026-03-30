@@ -26,7 +26,8 @@ import {
   Unlock,
   AlertTriangle,
   Download,
-  FileText
+  FileText,
+  Package
 } from 'lucide-react';
 import { NetworkSection } from './NetworkSection';
 import { Button } from './ui/button';
