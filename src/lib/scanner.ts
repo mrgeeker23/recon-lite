@@ -206,6 +206,7 @@ export interface ScanResult {
   suspicionTags: SuspicionTag[];
   riskThemes: RiskTheme[];
   passiveCrawl: PassiveCrawlInfo;
+  supplyChain?: SupplyChainResult;
   healthMetrics: {
     uptime: string;
     responseTime: number;
