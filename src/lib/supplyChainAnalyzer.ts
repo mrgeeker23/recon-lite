@@ -202,6 +202,245 @@ const LIBRARY_DATABASE: Record<string, {
     eol: true,
     license: 'MIT',
     knownVulnerabilities: ['Project abandoned - no security patches']
+  },
+  // --- Expanded library database ---
+  'dojo': {
+    latestVersion: '1.17.3',
+    eol: true,
+    license: 'BSD-3-Clause/AFL-2.1',
+    knownVulnerabilities: ['CVE-2020-5258 (Prototype Pollution)', 'CVE-2018-15494 (XSS)', 'Project in maintenance mode']
+  },
+  'ext': {
+    latestVersion: '7.7.0',
+    license: 'GPL-3.0/Commercial',
+    vulnerableBelow: '6.6.0',
+    knownVulnerabilities: ['CVE-2021-44695 (XSS in grid component)']
+  },
+  'yui': {
+    latestVersion: '3.18.1',
+    eol: true,
+    license: 'BSD-3-Clause',
+    knownVulnerabilities: ['Project discontinued by Yahoo in 2014', 'No security patches available']
+  },
+  'scriptaculous': {
+    latestVersion: '1.9.0',
+    eol: true,
+    license: 'MIT',
+    knownVulnerabilities: ['Depends on abandoned Prototype.js', 'No security updates']
+  },
+  'ember': {
+    latestVersion: '5.8.0',
+    license: 'MIT',
+    vulnerableBelow: '3.28.12',
+    knownVulnerabilities: ['CVE-2022-21975 (Prototype Pollution in ember-source)']
+  },
+  'knockout': {
+    latestVersion: '3.5.1',
+    license: 'MIT'
+  },
+  'polymer': {
+    latestVersion: '3.5.1',
+    eol: true,
+    license: 'BSD-3-Clause',
+    knownVulnerabilities: ['Superseded by Lit — no longer maintained']
+  },
+  'lit': {
+    latestVersion: '3.1.2',
+    license: 'BSD-3-Clause'
+  },
+  'alpinejs': {
+    latestVersion: '3.13.7',
+    license: 'MIT'
+  },
+  'htmx': {
+    latestVersion: '1.9.12',
+    license: 'BSD-2-Clause'
+  },
+  'preact': {
+    latestVersion: '10.20.1',
+    license: 'MIT'
+  },
+  'svelte': {
+    latestVersion: '4.2.12',
+    license: 'MIT'
+  },
+  'stimulus': {
+    latestVersion: '3.2.2',
+    license: 'MIT'
+  },
+  'turbo': {
+    latestVersion: '8.0.4',
+    license: 'MIT'
+  },
+  'rxjs': {
+    latestVersion: '7.8.1',
+    license: 'Apache-2.0'
+  },
+  'redux': {
+    latestVersion: '5.0.1',
+    license: 'MIT'
+  },
+  'mobx': {
+    latestVersion: '6.12.3',
+    license: 'MIT'
+  },
+  'next': {
+    latestVersion: '14.2.3',
+    license: 'MIT',
+    vulnerableBelow: '13.5.6',
+    knownVulnerabilities: ['CVE-2024-34350 (SSRF)', 'CVE-2024-24919 (Path Traversal)']
+  },
+  'nuxt': {
+    latestVersion: '3.11.2',
+    license: 'MIT'
+  },
+  'tailwindcss': {
+    latestVersion: '3.4.3',
+    license: 'MIT'
+  },
+  'tensorflow': {
+    latestVersion: '4.17.0',
+    license: 'Apache-2.0'
+  },
+  'dayjs': {
+    latestVersion: '1.11.10',
+    license: 'MIT'
+  },
+  'date-fns': {
+    latestVersion: '3.6.0',
+    license: 'MIT'
+  },
+  'luxon': {
+    latestVersion: '3.4.4',
+    license: 'MIT'
+  },
+  'highlight.js': {
+    latestVersion: '11.9.0',
+    license: 'BSD-3-Clause',
+    vulnerableBelow: '10.4.1',
+    knownVulnerabilities: ['CVE-2021-32760 (ReDoS)']
+  },
+  'prismjs': {
+    latestVersion: '1.29.0',
+    license: 'MIT',
+    vulnerableBelow: '1.25.0',
+    knownVulnerabilities: ['CVE-2022-23647 (XSS in command-line plugin)', 'CVE-2021-32723 (ReDoS)']
+  },
+  'marked': {
+    latestVersion: '12.0.2',
+    license: 'MIT',
+    vulnerableBelow: '4.0.10',
+    knownVulnerabilities: ['CVE-2022-21680 (ReDoS)', 'CVE-2022-21681 (ReDoS)']
+  },
+  'markdown-it': {
+    latestVersion: '14.1.0',
+    license: 'MIT'
+  },
+  'tinymce': {
+    latestVersion: '7.0.1',
+    license: 'MIT',
+    vulnerableBelow: '6.7.1',
+    knownVulnerabilities: ['CVE-2024-21910 (XSS)', 'CVE-2023-45818 (XSS via noscript)']
+  },
+  'ckeditor': {
+    latestVersion: '41.3.1',
+    license: 'GPL-2.0/Commercial',
+    vulnerableBelow: '37.0.0',
+    knownVulnerabilities: ['CVE-2024-24816 (XSS)']
+  },
+  'quill': {
+    latestVersion: '2.0.0',
+    license: 'BSD-3-Clause',
+    vulnerableBelow: '1.3.7',
+    knownVulnerabilities: ['CVE-2021-32851 (XSS via clipboard)']
+  },
+  'toastr': {
+    latestVersion: '2.1.4',
+    license: 'MIT'
+  },
+  'flatpickr': {
+    latestVersion: '4.6.13',
+    license: 'MIT'
+  },
+  'fullcalendar': {
+    latestVersion: '6.1.11',
+    license: 'MIT'
+  },
+  'sortablejs': {
+    latestVersion: '1.15.2',
+    license: 'MIT'
+  },
+  'howler': {
+    latestVersion: '2.2.4',
+    license: 'MIT'
+  },
+  'plyr': {
+    latestVersion: '3.7.8',
+    license: 'MIT'
+  },
+  'video.js': {
+    latestVersion: '8.10.0',
+    license: 'Apache-2.0'
+  },
+  'photoswipe': {
+    latestVersion: '5.4.3',
+    license: 'MIT'
+  },
+  'lightbox2': {
+    latestVersion: '2.11.4',
+    license: 'MIT'
+  },
+  'fancybox': {
+    latestVersion: '5.0.33',
+    license: 'Commercial/GPL'
+  },
+  'isotope': {
+    latestVersion: '3.0.6',
+    license: 'Commercial/GPL-3.0'
+  },
+  'masonry': {
+    latestVersion: '4.2.2',
+    license: 'MIT'
+  },
+  'particles.js': {
+    latestVersion: '2.0.0',
+    license: 'MIT'
+  },
+  'aos': {
+    latestVersion: '2.3.4',
+    license: 'MIT'
+  },
+  'scrollmagic': {
+    latestVersion: '2.0.8',
+    license: 'MIT'
+  },
+  'waypoints': {
+    latestVersion: '4.0.1',
+    license: 'MIT'
+  },
+  'lazysizes': {
+    latestVersion: '5.3.2',
+    license: 'MIT'
+  },
+  'lottie': {
+    latestVersion: '5.12.2',
+    license: 'MIT'
+  },
+  'cleave.js': {
+    latestVersion: '1.6.0',
+    license: 'Apache-2.0'
+  },
+  'imask': {
+    latestVersion: '7.5.0',
+    license: 'MIT'
+  },
+  'typed.js': {
+    latestVersion: '2.1.0',
+    license: 'MIT'
+  },
+  'countup.js': {
+    latestVersion: '2.8.0',
+    license: 'MIT'
   }
 };
 
